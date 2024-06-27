@@ -20,6 +20,9 @@ VERBOSE=1
 NODE="${NODE:-"local"}"
 COLOR=1
 RESULTS_DIR="${RESULTS_DIR:-"$SCRIPT_DIR/results"}"
+ASSETS_URL="https://200volts.com/blenderperf/assets"
+ASSETS_DIR="${ASSETS_DIR:-"${SCRIPT_DIR}/assets"}"
+DOWNLOAD_DIR="${DOWNLOAD_DIR:-"${SCRIPT_DIR}/downloads"}"
 
 PIDFILE="/tmp/blender_perf.pid"
 
@@ -101,6 +104,16 @@ while getopts ${OPTSTRING} opt; do
       	;;
   	esac
 done
+
+function download_assets()
+{
+	ec "download assets"
+	python3.11 "${SCRIPT_DIR}/download_assets.py" -u "${ASSETS_URL}" -d "${DOWNLOAD_DIR}"
+	ecd $? "done"
+}
+
+download_assets
+exit 0
 
 function run() {
 	local scene="$1"
