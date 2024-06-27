@@ -112,8 +112,29 @@ function download_assets()
 	ecd $? "done"
 }
 
-download_assets
-exit 0
+function prepare_assets() 
+{
+	for f in ${DOWNLOAD_DIR}/*.bz2; do
+		local filename=$(basename $f)
+
+		local timestamp_file="${ASSETS_DIR}/$filename.ltime"
+
+		if [[ -f "${timestamp_file}" ]]; then
+			local timestamp=$(<$timestamp_file)
+			local file_timestamp=$(stat -c %y $f)
+			if [[ $timestamp == $file_timestamp ]]; then
+				continue
+ 			fi	
+		fi
+		ec "unpack asset $f"
+		tar xf "$f" -C "${ASSETS_DIR}"
+		ecd $? "done"
+
+		ec "create timestamp file"
+		stat -c %y "$f" > "$timestamp_file"
+		ecd $? "done"
+	done
+}
 
 function run() {
 	local scene="$1"
@@ -224,10 +245,16 @@ check_pid                  # we avoid multiply instances of script
 check_blender              # check for blender
 check_results_dir
 create_pid_file
+download_assets
+prepare_assets
 mkdir -p "$RESULTS_DIR/$NODE_NAME"
 write_system_info "$RESULTS_DIR/$NODE_NAME" # dump information about this systems, so we understand on what mettal script runs
 
 for folder in assets/*; do
+	if [[ ! -d "$folder" ]]; then
+		continue
+	fi
+
 	for scene in "$folder/*.blend"; do
 		scene_file="$(realpath $scene)"
 
