@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 import argparse
+import re
 
 parser = argparse.ArgumentParser(prog='report_for_scene.py', description='Statically analyse results and generate numbers')
 
@@ -12,6 +13,7 @@ parser.add_argument('-directory', '-d', required=True)
 
 args = parser.parse_args()
 
+regexp = re.compile('^([0-9]+):([0-9]+):([0-9]+)\.*([0-9]+)*$')
 
 def get_subdirectories(directory):
     # List all entries in the directory
@@ -21,12 +23,18 @@ def get_subdirectories(directory):
     return subdirectories
 
 def parse_timedelta(time_str):
-    # Split the string into hours, minutes, seconds.microseconds
-    hms, microseconds = time_str.split('.')
-    hours, minutes, seconds = map(int, hms.split(':'))
+    matched = regexp.findall(time_str)
+    hours = int(matched[0][0])
+    minutes = int(matched[0][1])
+    seconds = int(matched[0][2])
 
+    if matched[0][3]:
+        microseconds = int(matched[0][3])
+    else:
+        microseconds = 0
+    
     # Construct the timedelta object
-    delta = timedelta(hours=hours, minutes=minutes, seconds=seconds, microseconds=int(microseconds))
+    delta = timedelta(hours=hours, minutes=minutes, seconds=seconds, microseconds=microseconds)
     return delta
 
 timestamp_format = "%H:%M:%S.%f"
@@ -45,6 +53,7 @@ for directory in subdirs:
 
         execution_times.append(timestamp.total_seconds())
 
+exit(0)
 # np
 execution_times = np.array(execution_times)
 
