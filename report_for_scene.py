@@ -45,11 +45,16 @@ subdirs = get_subdirectories(scene_dir)
 execution_times = []
 
 for directory in subdirs:
-    with open(scene_dir + '/' + directory + '/render_time.txt', 'r') as file:
+    filename = scene_dir + '/' + directory + '/render_time.txt'
+    with open(filename, 'r') as file:
         content = file.read()
         content = content.strip()
 
-        timestamp = parse_timedelta(content)
+        try:
+            timestamp = parse_timedelta(content)
+        except:
+            print("can't parse {}, str \"{}\" content".format(filename, content))
+            exit(1)
 
         execution_times.append(timestamp.total_seconds())
 

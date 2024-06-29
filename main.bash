@@ -24,6 +24,8 @@ ASSETS_URL="https://200volts.com/blenderperf/assets"
 ASSETS_DIR="${ASSETS_DIR:-"${SCRIPT_DIR}/assets"}"
 DOWNLOAD_DIR="${DOWNLOAD_DIR:-"${SCRIPT_DIR}/downloads"}"
 RESUME=0
+FORCE_ITERATION=-1
+FORCE_SCENE=""
 
 PIDFILE="/tmp/blender_perf.pid"
 
@@ -74,7 +76,7 @@ function ecd() # echo on done
 
 }
 
-OPTSTRING=":b:n:t:p:r"
+OPTSTRING=":b:n:t:p:ri:s:"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -97,6 +99,14 @@ while getopts ${OPTSTRING} opt; do
 	    r)
 			ec "Resume work"
 			RESUME=1
+		;;
+		i)
+			ec "Force render iteration"
+			FORCE_ITERATION=${OPTARG}
+		;;
+	    s)
+			ec "Force scene"
+			FORCE_SCENE="${OPTARG}"
 		;;
 
     	:)
@@ -242,7 +252,7 @@ function check_pid() {
 	fi
 }
 
-trap cleanup SIGINT SIGTERM
+trap cleanup SIGINT SIGTERM EXIT
 
 # main section
 check_pid                  # we avoid multiply instances of script 
@@ -262,18 +272,37 @@ for folder in assets/*; do
 
 	for scene in "$folder/*.blend"; do
 		scene_file="$(realpath $scene)"
+		scene_dir="${folder#*/}"
 
 		ec "test scene $scene_file"
 		outdir="$RESULTS_DIR/$NODE_NAME/$GPU/$DEV_TYPE/${folder#*/}" # removes assets from out dir 
-		
+
 		if [[ $RUN_PERF == 1 ]]; then
 			iteration=0
 			while [[ $iteration -lt $REPEATS ]]; do 
-				ec "Iteration: $iteration/$REPEATS"
+				ec "iteration: $iteration/$REPEATS"
+
+				if [[ $FORCE_SCENE != "" ]]; then
+					ec "force render scene $FORCE_SCENE"
+					if [[ $FORCE_SCENE != $scene_dir ]]; then
+						ec "skip skene $scene_dir"
+						iteration=$(( iteration + 1 )) 
+						continue
+					fi
+					ec "render forced scene $scene_dir"
+				fi
+
+				if [[ $FORCE_ITERATION != -1 ]]; then
+					if [[ $iteration != $FORCE_ITERATION ]]; then
+						ec "force iteration mode. Skip all other iterations"
+						iteration=$(( iteration + 1 )) 
+						continue
+					fi
+				fi
 				
 				if [[ $RESUME == 1 ]]; then
 					if [[ -f "$outdir/$iteration/render_time.txt" ]]; then
-						ec "Skip rendering. Reuse data from prev. pass"
+						ec "skip rendering. Reuse data from prev. pass"
 						iteration=$(( iteration + 1 )) 
 						continue
 					fi
