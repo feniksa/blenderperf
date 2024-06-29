@@ -53,7 +53,6 @@ for directory in subdirs:
 
         execution_times.append(timestamp.total_seconds())
 
-exit(0)
 # np
 execution_times = np.array(execution_times)
 
