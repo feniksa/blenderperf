@@ -23,6 +23,7 @@ RESULTS_DIR="${RESULTS_DIR:-"$SCRIPT_DIR/results"}"
 ASSETS_URL="https://200volts.com/blenderperf/assets"
 ASSETS_DIR="${ASSETS_DIR:-"${SCRIPT_DIR}/assets"}"
 DOWNLOAD_DIR="${DOWNLOAD_DIR:-"${SCRIPT_DIR}/downloads"}"
+RESUME=0
 
 PIDFILE="/tmp/blender_perf.pid"
 
@@ -73,7 +74,7 @@ function ecd() # echo on done
 
 }
 
-OPTSTRING=":b:n:t:p:"
+OPTSTRING=":b:n:t:p:r"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
@@ -93,6 +94,10 @@ while getopts ${OPTSTRING} opt; do
        		ec "Run perf tests"
 	  		RUN_PERF="${OPTARG}"
       	;;
+	    r)
+			ec "Resume work"
+			RESUME=1
+		;;
 
     	:)
       		echo "Option -${OPTARG} requires an argument."
@@ -265,6 +270,15 @@ for folder in assets/*; do
 			iteration=0
 			while [[ $iteration -lt $REPEATS ]]; do 
 				ec "Iteration: $iteration/$REPEATS"
+				
+				if [[ $RESUME == 1 ]]; then
+					if [[ -f "$outdir/$iteration/render_time.txt" ]]; then
+						ec "Skip rendering. Reuse data from prev. pass"
+						iteration=$(( iteration + 1 )) 
+						continue
+					fi
+				fi
+
 				run "$scene_file" "$outdir/$iteration"
 				iteration=$(( iteration + 1 )) 
 			done
