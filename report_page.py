@@ -49,7 +49,7 @@ for node in get_subdirectories(os.path.abspath(args.directory)):
                     'gpuName': get_file_content(gpu.path + '/gpu_name'),
                     'imagePath': get_render_file(scene.path),
                     'renderTime': read_float(os.path.join(scene.path, 'render_time.txt')),
-                    'vramUsage': read_float(os.path.join(scene.path, 'render_time.txt')),
+                    'vramUsage': read_float(os.path.join(scene.path, 'vram_usage.txt')),
                 }
 
                 trace_file = get_trace_file(scene.path)

@@ -75,7 +75,8 @@ with open(scene_dir + '/render_time.txt', 'w') as file:
     file.write(str(median_execution_time))
 
 # Visualize the distribution of execution times
-plt.figure(figsize=(10, 6))
+#plt.figure(figsize=(10, 6))
+plt.figure()
 sns.histplot(execution_times, bins=30, kde=True)
 plt.title('Distribution of Execution Times')
 plt.xlabel('Execution Time')
@@ -90,7 +91,6 @@ plt.title('Box Plot of Execution Times')
 plt.xlabel('Execution Time')
 plt.savefig(scene_dir + '/box_plot_of_execution_times.png')
 
-exit(0)
 
 # Identify outliers using z-score
 z_scores = (execution_times - mean_execution_time) / std_dev_execution_time
@@ -100,14 +100,88 @@ print(f"Number of outliers: {np.sum(outliers)}")
 print(execution_times[outliers])
 
 # Plot execution time over time for each test case
-plt.figure(figsize=(12, 6))
-unique_test_names = set(test_names)
-for test_name in unique_test_names:
-    indices = [i for i, t in enumerate(test_names) if t == test_name]
-    plt.plot([timestamps[i] for i in indices], [execution_times[i] for i in indices], label=test_name)
+#plt.figure(figsize=(12, 6))
+plt.figure()
 
-plt.title('Execution Time Over Time')
+plt.plot(execution_times)
+plt.title('Execution Time (less is better)')
 plt.xlabel('Timestamp')
 plt.ylabel('Execution Time')
-plt.legend()
-plt.show()
+#plt.legend()
+plt.savefig(scene_dir + '/rndtime.png')
+
+
+## ----------------------------------------------------
+# analyse memory
+## ----------------------------------------------------
+
+vram_usage_mbytes = []
+
+for directory in subdirs:
+    filename = scene_dir + '/' + directory + '/render_memory.txt'
+    with open(filename, 'r') as file:
+        content = file.read()
+        content = content.strip()
+
+        try:
+            vram_usage_casted = float(content)
+        except:
+            print("can't parse {}, str \"{}\" content".format(filename, content))
+            exit(1)
+
+        vram_usage_mbytes.append(vram_usage_casted)
+
+# np
+vram_usage_mbytes = np.array(vram_usage_mbytes)
+
+mean_vram_usage = np.mean(vram_usage_mbytes)
+median_vram_usage = np.median(vram_usage_mbytes)
+std_dev_vram_usage = np.std(vram_usage_mbytes)
+percentiles_vram_usage = np.percentile(vram_usage_mbytes, [25, 50, 75, 90])
+
+print(f"Mean VRAM usage: {mean_vram_usage}")
+print(f"Median VRAM usage: {median_vram_usage}")
+print(f"Standard Deviation of VRAM usage: {std_dev_vram_usage}")
+print(f"Percentiles: {percentiles_vram_usage}")
+ 
+with open(scene_dir + '/vram_usage.txt', 'w') as file:
+    file.write(str(median_vram_usage))
+
+
+# Visualize the distribution of vram_usage
+#plt.figure(figsize=(10, 6))
+plt.figure()
+sns.histplot(execution_times, bins=30, kde=True)
+plt.title('Distribution of VRAM usage')
+plt.xlabel('VRAM usage in mb')
+plt.ylabel('Frequency')
+plt.savefig(scene_dir + '/distribution_of_vram_usage.png')
+
+# Box plot to visualize the spread and outliers
+#plt.figure(figsize=(10, 6))
+plt.figure()
+sns.boxplot(x=execution_times)
+plt.title('Box Plot of VRAM usage')
+plt.xlabel('VRAM in mb')
+plt.savefig(scene_dir + '/box_plot_of_vram_usage.png')
+
+
+# Identify outliers using z-score
+z_scores = (execution_times - mean_execution_time) / std_dev_execution_time
+outliers = np.abs(z_scores) > 3
+
+print(f"Number of outliers: {np.sum(outliers)}")
+print(execution_times[outliers])
+
+# Plot execution time over time for each test case
+#plt.figure(figsize=(12, 6))
+plt.figure()
+
+plt.plot(execution_times)
+plt.title('VRAM usage (less is better)')
+plt.xlabel('Timestamp')
+plt.ylabel('VRAM in mb')
+#plt.legend()
+plt.savefig(scene_dir + '/vram_usage.png')
+
+

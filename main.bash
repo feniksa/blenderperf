@@ -312,9 +312,9 @@ for folder in assets/*; do
 				iteration=$(( iteration + 1 )) 
 			done
 
-			if [[ $TRACE == 1 ]]; then
+			if [[ $TRACE == 0 ]]; then
 				ec "copy render result image"
-				find "$outdir/0" -type f -name 'render.png' -name 'render.jpg' -exec cp {} "$outdir" \;
+				find "$outdir/0" -type f \( -name render.png -or -name render.jpg \) -exec cp {} "$outdir" \;
 				ecd $? "done"
 			fi
 
