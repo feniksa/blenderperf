@@ -19,10 +19,22 @@ def get_trace_file(path):
             return os.path.join(path, entry)
     return None
 
+def normalize_webpath(path):
+    webpath = ''
+    if args.directory[len(args.directory) - 1] == '/':
+        webpath = path.replace(args.directory, '')
+    else:
+        webpath = path.replace(args.directory + '/', '')
+
+    return webpath
+
+
 def get_render_file(path):
     for entry in os.listdir(path):
         if entry.startswith('render.'):
-            return os.path.join(path, entry)
+            webpath = normalize_webpath(path) 
+            image_path = os.path.join(webpath, entry)
+            return image_path
     return None
 
 def read_float(path):
@@ -36,7 +48,8 @@ def get_file_content(file_path):
     return file_content;
 
 report_page_input = {}
-for node in get_subdirectories(os.path.abspath(args.directory)):
+#for node in get_subdirectories(os.path.abspath(args.directory)):
+for node in get_subdirectories(args.directory):
     for gpu in get_subdirectories(node):
         for backend in get_subdirectories(gpu):
             for scene in get_subdirectories(backend):
@@ -50,6 +63,7 @@ for node in get_subdirectories(os.path.abspath(args.directory)):
                     'imagePath': get_render_file(scene.path),
                     'renderTime': read_float(os.path.join(scene.path, 'render_time.txt')),
                     'vramUsage': read_float(os.path.join(scene.path, 'vram_usage.txt')),
+                    'sceneDataPath' : normalize_webpath(scene.path),
                 }
 
                 trace_file = get_trace_file(scene.path)
@@ -61,5 +75,5 @@ for node in get_subdirectories(os.path.abspath(args.directory)):
 with open('report_page_template.html', 'r') as report_page_template:
     content = report_page_template.read()
     content = content.replace('JSON.parse(defaultScenes())', json.dumps(report_page_input))
-    with open(args.directory + '/report_page.html', 'w') as file:
+    with open(args.directory + '/index.html', 'w') as file:
         file.write(content)

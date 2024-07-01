@@ -378,6 +378,7 @@
             const divId = `scene-${i}`;
             const sceneData = scenes[sceneName];
             const perfettoTracePath = (sceneData.find(x => "perfettoTracePath" in x) ?? {}).perfettoTracePath;
+            const sceneDataPath = (sceneData.find(x => "sceneDataPath" in x) ?? {}).sceneDataPath;
 
             ulNavList.append(`<li><a href="#${divId}">${sceneName}</a></li>`);
             const divScene = divScenes.append(`<div id="${divId}" class="section"></div>`);
@@ -385,6 +386,7 @@
             divScene.append(`<div class="scene-image">
                 <img src="${sceneData[0].imagePath}" alt="${sceneName}" />
                 <a href="${perfettoTracePath}"><h3>Perfetto trace</h3></a>
+                <a href="${sceneDataPath}">Scene data</h3></a>
             </div>`);
 
             const renderTimeChart = createChartBar(
