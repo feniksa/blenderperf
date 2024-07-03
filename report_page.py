@@ -74,6 +74,6 @@ for node in get_subdirectories(args.directory):
 
 with open('report_page_template.html', 'r') as report_page_template:
     content = report_page_template.read()
-    content = content.replace('JSON.parse(defaultScenes())', json.dumps(report_page_input))
+    content = content.replace('= defaultScenes();', '= ' + json.dumps(report_page_input) + ';')
     with open(args.directory + '/index.html', 'w') as file:
         file.write(content)
