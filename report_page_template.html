@@ -376,7 +376,7 @@
         for (const sceneName of Object.keys(scenes).sort()) {
             // cannot use scene name as id because it may contain spaces
             const divId = `scene-${i}`;
-            const sceneData = scenes[sceneName];
+            const sceneData = scenes[sceneName].sort((a, b) => a.backendName.localeCompare(b.backendName) || a.gpuName.localeCompare(b.gpuName));
             const perfettoTracePath = (sceneData.find(x => "perfettoTracePath" in x) ?? {}).perfettoTracePath;
 
             ulNavList.append(`<li><a href="#${divId}">${sceneName}</a></li>`);
@@ -391,8 +391,11 @@
                 `scene-${i}-renderTime`, 
                 "Render Time (in Seconds)", 
                 sceneData
-                    .map(x => ({ name: `${x.backendName} / ${x.gpuName} (${x.nodeName})`, value: x.renderTime, backendName: x.backendName }))
-                    .sort((a, b) => a.value - b.value)
+                    .map(x => ({ 
+                        name: `${x.backendName} / ${x.gpuName} (${x.nodeName})`, 
+                        value: x.renderTime, 
+                        backendName: x.backendName 
+                    }))
             );
             divScene.append(renderTimeChart.divElem);
             
@@ -400,14 +403,20 @@
                 `scene-${i}-vramUsage`, 
                 "Memory Usage (in GB)", 
                 sceneData
-                    .map(x => ({ name: `${x.backendName} / ${x.gpuName} (${x.nodeName})`, value: x.vramUsage, backendName: x.backendName }))
-                    .sort((a, b) => a.value - b.value)
+                    .map(x => ({ 
+                        name: `${x.backendName} / ${x.gpuName} (${x.nodeName})`, 
+                        value: x.vramUsage, 
+                        backendName: x.backendName 
+                    }))
             );
             divScene.append(vramUsageChart.divElem);
-            		divScene.append('<br><br>');
 
+            divScene.append('<br><br>');
 			for(x = 0; x < sceneData.length; ++x) {
-						divScene.append("<a href=" + sceneData[x].sceneDataPath + ">" + sceneData[x].sceneDataPath + "</a><br>");
+                const sceneDataPath = "sceneDataPath" in sceneData[x] 
+                    ? sceneData[x].sceneDataPath 
+                    : `${sceneData[x].nodeName}/${sceneData[x].gpuName}/${sceneData[x].backendName}/${sceneName}`;
+                divScene.append("<a href=" + sceneDataPath + ">" + sceneDataPath + "</a><br>");
 			}
 
             i++;
