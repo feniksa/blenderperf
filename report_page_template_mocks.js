@@ -231,31 +231,40 @@ function defaultNodesInformation() {
     return [
         {
             "nodeName": "node1",
-            "gpuName": "6800XT",
-            "vram": 16,
             "cpu": "Ryzen 3800X",
-            "ram": 32
-        },
-        {
-            "nodeName": "node1",
-            "gpuName": "RTX 3080",
-            "cpu": "Ryzen 3800X",
-            "vram": 8,
-            "ram": 32
-        },
-        {
-            "nodeName": "node2",
-            "gpuName": "6800XT",
-            "vram": 16,
-            "cpu": "Ryzen 3800X",
-            "ram": 16
+            "ram": 32,
+            "gpus": [
+                {
+                    "gpuName": "6800XT",
+                    "vram": 16,
+                },
+                {
+                    "gpuName": "RTX 3080",
+                    "vram": 8,
+                },
+            ],
         },
         {
             "nodeName": "node2",
-            "gpuName": "RTX 3080",
-            "vram": 8,
             "cpu": "Ryzen 3800X",
-            "ram": 16
+            "ram": 16,
+            "gpus": [
+                {
+                    "gpuName": "6800XT",
+                    "vram": 16,
+                },
+            ],
+        },
+        {
+            "nodeName": "node3",
+            "cpu": "Ryzen 3800X",
+            "ram": 16,
+            "gpus": [
+                {
+                    "gpuName": "RTX 3080",
+                    "vram": 8,
+                },
+            ],
         }
     ];
 }

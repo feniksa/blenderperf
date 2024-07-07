@@ -99,6 +99,11 @@
             margin-left: 5%;
             width: 80%;
         }
+        td ul {
+            list-style: none;
+            padding: 0px;
+            margin: 0px;
+        }
     </style>
 </head>
 <body>
@@ -122,7 +127,7 @@
 
             const canvasElem = $(`<canvas id="${canvasElemId}"></canvas>`);
             const divElem = $(`<div class="chart-bar"></div>`);
-            divElem.height(`${data.length * 75}px`);
+            divElem.height(`${data.length * 75 + 50}px`);
             divElem.append(canvasElem);
             
             const chartBar = new Chart(canvasElem, {
@@ -157,8 +162,15 @@
                 chartBar,
             };
         }
+        let pageInput = null;
+        if (pageInput == null) {
+            pageInput = {
+                scenes: defaultScenes(),
+                nodesInfo: defaultNodesInformation(),
+            };
+        }
 
-        const scenes = defaultScenes();
+        const scenes = pageInput.scenes;
         const divScenes = $("#scenes");
         const ulNavList = $("#nav-list");
         let uvId = 0;
@@ -211,7 +223,7 @@
             uvId++;
         }
         
-        const nodesInfo = defaultNodesInformation();
+        const nodesInfo = pageInput.nodesInfo;
         const sysInfoDivName = "Systems Information";
         ulNavList.append(`<li><a href="#sys-info">${sysInfoDivName}</a></li>`);
         const divInfos = divScenes.append(`<div id="sys-info" class="section"></div>`);
@@ -231,12 +243,20 @@
         const tbody = $("tbody");
         for (let i = 0; i < nodesInfo.length; i++) {
             const info = nodesInfo[i];
+            let gpuNames = "";
+            let vrams = "";
+            for (let j = 0; j < info.gpus.length; j++ ) {
+                const gpu = info.gpus[j];
+                gpuNames += `<li>${gpu.gpuName}</li>`;
+                vrams += `<li>${gpu.vram}</li>`;
+            }
+
             tbody.append(`<tr>
                 <td>${info.nodeName}</td>
                 <td>${info.cpu}</td>
-                <td>${info.ram}</td>
-                <td>${info.gpuName}</td>
-                <td>${info.vram}</td>
+                <td>${parseFloat(info.ram.toFixed(1))}</td>
+                <td><ul>${gpuNames}</ul></td>
+                <td><ul>${vrams}</ul></td>
             </tr>`);
         }
     </script>

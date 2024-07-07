@@ -47,22 +47,35 @@ def get_file_content(file_path):
         file_content = file.read()
     return file_content;
 
-report_page_input = {}
+scenes = {}
+nodes_info = []
 #for node in get_subdirectories(os.path.abspath(args.directory)):
 for node in get_subdirectories(args.directory):
+    cpu = get_file_content(node.path + '/cpu_name')
+    ram = float(get_file_content(node.path + '/avail_ram_in_kb').strip()) / 1024.0 / 1024.0
+    info = { 
+        'cpu': cpu, 
+        'ram': ram,
+        'gpus': []
+    }
     for gpu in get_subdirectories(node):
+        gpu_name = get_file_content(gpu.path + '/gpu_name')
+        info['gpus'].append({
+            'gpuName': gpu_name,
+            'vram': 'unknown'
+        })
         for backend in get_subdirectories(gpu):
             for scene in get_subdirectories(backend):
-                if not scene.name in report_page_input:
-                    report_page_input[scene.name] = []
+                if not scene.name in scenes:
+                    scenes[scene.name] = []
 
                 scene_data = {
                     'nodeName': node.name,
                     'backendName': backend.name,
-                    'gpuName': get_file_content(gpu.path + '/gpu_name'),
+                    'gpuName': gpu_name,
                     'imagePath': get_render_file(scene.path),
-                    'renderTime': read_float(os.path.join(scene.path, 'render_time.txt')),
-                    'vramUsage': read_float(os.path.join(scene.path, 'vram_usage.txt')),
+                    'renderTime': float(get_file_content(scene.path + '/render_time.txt').strip()),
+                    'vramUsage': float(get_file_content(scene.path + '/vram_usage.txt').strip()),
                     'sceneDataPath' : normalize_webpath(scene.path),
                 }
 
@@ -70,10 +83,12 @@ for node in get_subdirectories(args.directory):
                 if not trace_file is None:
                     scene_data['perfettoTracePath'] = trace_file
 
-                report_page_input[scene.name].append(scene_data)
+                scenes[scene.name].append(scene_data)
+    nodes_info.append(info)
 
 with open('report_page_template.html', 'r') as report_page_template:
     content = report_page_template.read()
-    content = content.replace('= defaultScenes();', '= ' + json.dumps(report_page_input) + ';')
+    report_page_input = json.dumps({ "scenes": scenes, "nodesInfo": nodes_info })
+    content = content.replace('let pageInput = null;', 'let pageInput = ' + report_page_input + ';')
     with open(args.directory + '/index.html', 'w') as file:
         file.write(content)
