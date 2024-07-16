@@ -26,6 +26,8 @@ for scene in bpy.data.scenes:
     scene.cycles.samples = int(args.samples)
     scene.render.engine = 'CYCLES'
     scene.cycles.use_denoising = False
+    scene.cycles.use_adaptive_sampling = False
+    
 
 #bpy.context.scene.render.engine = 'CYCLES'
 
