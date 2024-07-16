@@ -19,7 +19,7 @@ GPU_NAME=${GPU_NAME:-""}
 VERBOSE=1
 NODE="${NODE:-"local"}"
 COLOR=1
-RESULTS_DIR="${RESULTS_DIR:-"$SCRIPT_DIR/results"}"
+RESULTS_DIR="${RESULTS_DIR:-$SCRIPT_DIR/results}"
 ASSETS_URL="https://200volts.com/blenderperf/assets"
 ASSETS_DIR="${ASSETS_DIR:-"${SCRIPT_DIR}/assets"}"
 DOWNLOAD_DIR="${DOWNLOAD_DIR:-"${SCRIPT_DIR}/downloads"}"
@@ -76,48 +76,84 @@ function ecd() # echo on done
 
 }
 
-OPTSTRING=":b:n:t:p:ri:s:"
+function help() {
+	echo -e "USAGE: main.bash [btnpris]"
+	echo
+	echo -e "-b\tSet path to blender executable. By default $BLENDER_EXE"
+	echo -e "-t\tRun perfetto trace. By default $TRACE"
+	echo -e "-n\tSet node name. This node name will be directory in results dir. By default \"$NODE_NAME\""
+	echo -e "-p\tRun performance tests. By default $RUN_PERF"
+	echo -e "-r\tResume work. All presenet results in results dir will be untoched"
+	echo -e "-i\tRender only specific iteration (usefull with option -s to set specific scene)"
+	echo -e "-s\tRender only specific scene. Scene name is directory name of scene from asset dir"
+	echo
+	echo
+	echo "VARIABLES ARE"
+	echo 
+	echo -e "DOWNLOAD_DIR\t$DOWNLOAD_DIR" 
+	echo -e "GPU\t\t$GPU"
+	echo -e "GPU NAME\t$GPU_NAME" 
+	echo -e "ASSETS_URL\t$ASSETS_URL"
+	echo -e "ASSETS_DIR\t$ASSETS_DIR"
+	echo -e "SAMPLES\t\t$SAMPLES"
+	echo -e "REPEATS\t\t$REPEATS"
+	echo -e "BLENDER_EXE\t$BLENDER_EXE"
+	echo -e "NODE\t\t$NODE"
+	echo -e "NODE_NAME\t$NODE_NAME"
+	echo -e "RESULTS_DIR\t$RESULTS_DIR"
+	echo -e "RESUME\t\t$RESUME"
+	echo -e "FORCE_ITERATION\t$FORCE_ITERATION"
+	echo -e "FORCE_SCENE\t$FORCE_SCENE"
+	echo -e "PIDFILE\t\t$PIDFILE"
+	echo -e "COLOR\t\t$COLOR"
+}
+
+
+OPTSTRING=":b:n:t:p:ri:s:h"
 
 while getopts ${OPTSTRING} opt; do
 	case ${opt} in
-    	b)
-      		ec "Oveeride blender executable: ${OPTARG}"
-	  		BLENDER_EXE="${OPTARG}"
-      	;;
-    	t) 
-       		ec "Get trace for blender (requires patched blender)"
-	  		TRACE=1
-      	;;
-		n)
-			ec "Set node name to ${OPTARG}"
-			NODE_NAME="${OPTARG}"
+	b)
+		ec "Overright blender executable: ${OPTARG}"
+		BLENDER_EXE="${OPTARG}"
+	;;
+	t) 
+		ec "Get trace for blender (requires patched blender)"
+		TRACE=1
 		;;
-    	p) 
-       		ec "Run perf tests"
-	  		RUN_PERF="${OPTARG}"
-      	;;
-	    r)
-			ec "Resume work"
-			RESUME=1
+	n)
+		ec "Set node name to ${OPTARG}"
+		NODE_NAME="${OPTARG}"
 		;;
-		i)
-			ec "Force render iteration"
-			FORCE_ITERATION=${OPTARG}
+	p) 
+		ec "Run perf tests"
+		RUN_PERF="${OPTARG}"
 		;;
-	    s)
-			ec "Force scene"
-			FORCE_SCENE="${OPTARG}"
+	r)
+		ec "Resume work"
+		RESUME=1
+		;;
+	i)
+		ec "Force render iteration"
+		FORCE_ITERATION=${OPTARG}
+		;;
+	s)
+		ec "Force scene"
+		FORCE_SCENE="${OPTARG}"
+		;;
+	h)	help
+		exit 0
 		;;
 
-    	:)
-      		echo "Option -${OPTARG} requires an argument."
-      		exit 1
-      	;;
-    	?)
-      		echo "Invalid option: -${OPTARG}."
-      		exit 1
-      	;;
-  	esac
+	:)
+		echo "Option -${OPTARG} requires an argument."
+		exit 1
+		;;
+	?)
+		echo "Invalid option: -${OPTARG}."
+		exit 1
+		;;
+	esac
 done
 
 function download_assets()
@@ -139,7 +175,7 @@ function prepare_assets()
 			local file_timestamp=$(stat -c %y $f)
 			if [[ $timestamp == $file_timestamp ]]; then
 				continue
- 			fi	
+			fi	
 		fi
 		ec "unpack asset $f"
 		tar xf "$f" -C "${ASSETS_DIR}"
@@ -255,9 +291,9 @@ function check_pid() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # main section
-check_pid                  # we avoid multiply instances of script 
+check_pid		   # we avoid multiply instances of script 
 					       # even for same different GPU's (for glorry of corrent numbers, of course!)
-check_blender              # check for blender
+check_blender		   # check for blender
 check_results_dir
 create_pid_file
 download_assets
