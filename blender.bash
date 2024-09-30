@@ -81,7 +81,7 @@ if [[ ! -d "${OUTDIR}" ]]; then
 	exit -1
 fi
 
-$BLENDER_EXE --background --factory-startup -noaudio --python "$SCRIPT_DIR/blender_main.py" \
+$BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python "$SCRIPT_DIR/blender_main.py" \
 	-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" | \
 	tee "$OUTDIR/log.txt" 
 
