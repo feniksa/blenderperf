@@ -1,5 +1,3 @@
-/home/feniks/.local/bin
-
 requests
 numpy
 seaborn
