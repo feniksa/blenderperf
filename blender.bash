@@ -85,8 +85,8 @@ $BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python 
 	-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" 2>&1 | \
 	tee "$OUTDIR/log.txt" 
 
-if [[ ! -f "$OUTDIR/render.png" ]]; then
-	echo -e "no render output"
+if [[ ! -f "$OUTDIR/render.png" ]] && [[ ! -f "$OUTPUT/render.jpg"]] ; then
+	echo -e "HALT: no render output!!!"
 	exit -1
 fi
 
