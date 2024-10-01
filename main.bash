@@ -36,11 +36,11 @@ function cleanup() {
 }
 
 function print_red() {
-    echo -e "\e[31m$@\e[0m"
+ 	echo -e "\e[31m$@\e[0m"
 }
 
 function print_green() {
-	 echo -e "\e[32m$@\e[0m"
+	echo -e "\e[32m$@\e[0m"
 }
 
 function ec() # echo
@@ -67,11 +67,10 @@ function ecd() # echo on done
 			fi
 		fi
 	else
-		if [[ $VERBOSE == 1 ]]; then
-			print_red "$@"
-			cleanup
-		fi
-		exit 1
+		print_red "$@"
+		cleanup
+
+		exit $1
 	fi
 
 }
