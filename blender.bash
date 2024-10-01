@@ -82,8 +82,13 @@ if [[ ! -d "${OUTDIR}" ]]; then
 fi
 
 $BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python "$SCRIPT_DIR/blender_main.py" \
-	-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" | \
+	-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" 2>&1 | \
 	tee "$OUTDIR/log.txt" 
+
+if [[ ! -f "$OUTDIR/render.png" ]]; then
+	echo -e "no render output"
+	exit -1
+fi
 
 exit $?
 
