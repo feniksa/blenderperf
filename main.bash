@@ -67,7 +67,7 @@ function ecd() # echo on done
 			fi
 		fi
 	else
-		print_red "$@"
+		print_red "ERROR: $@"
 		cleanup
 
 		exit $1
