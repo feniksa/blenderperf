@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BLENDER_EXE="blender"
 SCENE_FILE="${SCRIPT_DIR}/assets/cube/cube.blend"
@@ -85,12 +83,16 @@ $BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python 
 	-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" 2>&1 | \
 	tee "$OUTDIR/log.txt" 
 
-if [[ ! -f "$OUTDIR/render.png" ]] && [[ ! -f "$OUTDIR/render.jpg" ]]
+blender_exit_code=$?
+
+if [[ ! -f "$OUTDIR/render.png" ]] && [[ ! -f "$OUTDIR/render.jpg" ]] && [[ $blender_exit_code != 0 ]]
 then
 	echo -e "HALT: no render output!!!"
 	exit -1
 fi
 
-exit $?
+exit 24
+
+exit $blender_exit_code
 
 

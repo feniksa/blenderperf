@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 [[ -f ~/.blender_perf ]] && source ~/.blender_perf
 
@@ -26,6 +26,7 @@ DOWNLOAD_DIR="${DOWNLOAD_DIR:-"${SCRIPT_DIR}/downloads"}"
 RESUME=0
 FORCE_ITERATION=-1
 FORCE_SCENE=""
+IGNORE_FAILURES=5
 
 PIDFILE="/tmp/blender_perf.pid"
 
@@ -68,11 +69,8 @@ function ecd() # echo on done
 		fi
 	else
 		print_red "ERROR: $@"
-		cleanup
-
 		exit $1
 	fi
-
 }
 
 function help() {
@@ -189,22 +187,43 @@ function prepare_assets()
 function run() {
 	local scene="$1"
 	local outdir="$2"
+	local errdir="$3"
 
 	ec "Create output directory $outdir"
 	mkdir -p "$outdir"
 	ecd $? "done"
+	
+	local iter=0
+	local blender_exit_code=0
+	while [[ $iter -lt $IGNORE_FAILURES ]]; do
+		iter=$(( iter + 1 )) 
+		ec "run blender.bash"
+		"$SCRIPT_DIR/blender.bash" -x "$BLENDER_EXE" -o "$outdir" -s "$SAMPLES" -f "$scene_file" -u "$DEV_TYPE"
+		blender_exit_code=$?
+		if [[ $blender_exit_code == 0 ]]; then
+			print_green "blender run done"
+			break
+		else
+			print_red "blender run failed"
+			mkdir -p "$errdir/retry_$iter"
+			cp -r "$outdir" "$errdir/retry_$iter"
+		fi
+	done
 
-	ec "run blender.bash"
-	"$SCRIPT_DIR/blender.bash" -x "$BLENDER_EXE" -o "$outdir" -s "$SAMPLES" -f "$scene_file" -u "$DEV_TYPE"
-	ecd $? "done"
+	if [[ $iter == $IGNORE_FAILURES ]]; then
+		echo -e "blender returned failure too many times"
+		echo -e "command"
+		echo -e "$SCRIPT_DIR/blender.bash" -x "$BLENDER_EXE" -o "$outdir" -s "$SAMPLES" -f "$scene_file" -u "$DEV_TYPE"
+		ecd $blender_exit_code ""
+	fi
 
 	ec "parse rendering results"
 	python3.11 filter.py -i "$outdir/log.txt" -c "$outdir/general_perf.csv"
-	ecd $? "done"
+	ecd $? "parse rendering results"
 
 	ec "generate summary $outdir/general_perf.csv"
 	SUMMARY=`python3.11 get_csv_summary.py -file "$outdir/general_perf.csv"`
-	ecd $? "done"
+	ecd $? "generate summary $outdir/general_perf.csv"
 
 	ec "make $outdir/render_time.txt" 
 	echo $SUMMARY | awk -F ' ' '{ print $1 }' > $outdir/render_time.txt
@@ -343,7 +362,7 @@ for folder in assets/*; do
 					fi
 				fi
 
-				run "$scene_file" "$outdir/$iteration"
+				run "$scene_file" "$outdir/$iteration" "$outdir/errors/"
 				iteration=$(( iteration + 1 )) 
 			done
 
