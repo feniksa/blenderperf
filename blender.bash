@@ -91,8 +91,6 @@ then
 	exit -1
 fi
 
-exit 24
-
 exit $blender_exit_code
 
 
