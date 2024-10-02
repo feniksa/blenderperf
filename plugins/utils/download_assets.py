@@ -1,12 +1,11 @@
 import os
 import argparse
-import json
 import requests
 
 parser = argparse.ArgumentParser(prog='download_assets.py', description='Download test assets')
 
-parser.add_argument('-url', '-', required=True)
-parser.add_argument('-directory', '-d', required=True)
+parser.add_argument('--url', '-u', required=True)
+parser.add_argument('--directory', '-d', required=True)
 
 args = parser.parse_args()
 
@@ -49,15 +48,15 @@ def download_file(url, filename):
                 print('{}/{}'.format(downloaded, file_length), end="\x1b[1G")
             print('')
 
-if not os.path.exists(args.directory):
-    print("directory {} doesn't exists".format(args.directory))
-    exit(2)
+def main():
+    if not os.path.exists(args.directory):
+        raise Exception("directory {} doesn't exists".format(args.directory))
 
-print('send request to ' + args.url)
+    print('send request to ' + args.url)
 
-response = requests.get(args.url)
-if response.status_code == 200:
-    print('server reply 200')
+    response = requests.get(args.url)
+    if response.status_code != 200:
+        raise Exception("Failed to retrieve data {}".format(response.status_code))
 
     data = response.json()
     print('present {} assets '.format(len(data)))
@@ -74,20 +73,18 @@ if response.status_code == 200:
             if same_filesize(asset_filename, remote_info['size']):
                 print('asset {} cached. skip'.format(remote_info['name']))
                 continue
-       
+
         download_url = args.url + '/' + remote_info['name']
 
         print('download {} and save to {}'.format(download_url, asset_filename))
         download_file(download_url, asset_filename)
         print('done')
 
-        print('save timestamp of file')        
+        print('save timestamp of file')
         save_file_mtime_size(timestamp_filename, remote_info['mtime'])
         print('done')
-else:
-    print(f"Failed to retrieve data: {response.status_code}")
-    exit(1)
 
-
+if __name__ == "__main__":
+    main()
 
 

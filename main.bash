@@ -159,7 +159,7 @@ done
 function download_assets()
 {
 	ec "download assets"
-	python3.11 "${SCRIPT_DIR}/download_assets.py" -u "${ASSETS_URL}" -d "${DOWNLOAD_DIR}"
+	python "${SCRIPT_DIR}/download_assets.py" -u "${ASSETS_URL}" -d "${DOWNLOAD_DIR}"
 	ecd $? "done"
 }
 
@@ -200,11 +200,11 @@ function run() {
 	ecd $? "done"
 
 	ec "parse rendering results"
-	python3.11 filter.py -i "$outdir/log.txt" -c "$outdir/general_perf.csv"
+	python filter.py -i "$outdir/log.txt" -c "$outdir/general_perf.csv"
 	ecd $? "done"
 
 	ec "generate summary $outdir/general_perf.csv"
-	SUMMARY=`python3.11 get_csv_summary.py -file "$outdir/general_perf.csv"`
+	SUMMARY=`python get_csv_summary.py -file "$outdir/general_perf.csv"`
 	ecd $? "done"
 
 	ec "make $outdir/render_time.txt" 
@@ -292,8 +292,8 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # main section
 check_pid		   # we avoid multiply instances of script 
-					       # even for same different GPU's (for glorry of corrent numbers, of course!)
-check_blender		   # check for blender
+					     # even for same different GPU's (for glorry of corrent numbers, of course!)
+check_blender	 # check for blender
 check_results_dir
 create_pid_file
 download_assets
@@ -355,7 +355,7 @@ for folder in assets/*; do
 			fi
 
 			ec "analyse data"
-			python3.11 "$SCRIPT_DIR/report_for_scene.py" -d "$outdir"
+			python "$SCRIPT_DIR/report_for_scene.py" -d "$outdir"
 			ecd $? "done"
 		fi
 
@@ -366,6 +366,6 @@ for folder in assets/*; do
 done
 
 ec "generate report"
-python3.11 "$SCRIPT_DIR/report_page.py" -d "$RESULTS_DIR"
+python "$SCRIPT_DIR/report_page.py" -d "$RESULTS_DIR"
 ecd $? "done"
 

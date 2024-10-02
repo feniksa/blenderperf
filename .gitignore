@@ -1,3 +1,6 @@
 assets/*
 results/*
 downloads/*
+workdir/*
+outdir/*
+.idea
