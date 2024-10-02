@@ -84,13 +84,17 @@ $BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python 
 	tee "$OUTDIR/log.txt" 
 
 blender_exit_code=$?
-
-if [[ ! -f "$OUTDIR/render.png" ]] && [[ ! -f "$OUTDIR/render.jpg" ]] && [[ $blender_exit_code != 0 ]]
-then
-	echo -e "HALT: no render output!!!"
-	exit -1
+if [[ $blender_exit_code != 0 ]]; then
+	echo -e "HALT: blender exit code is not 0"
+	exit 1
 fi
 
-exit $blender_exit_code
+if [[ ! -f "$OUTDIR/render.png" ]] && [[ ! -f "$OUTDIR/render.jpg" ]]
+then
+	echo -e "HALT: no render output!!!"
+	exit 2 
+fi
+
+exit 0
 
 
