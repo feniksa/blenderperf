@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 import subprocess
+import shutil
 import sys
 from datetime import timedelta
 
@@ -36,6 +37,7 @@ def get_render_time(directory):
 
 def check_executable(path: str):
     return os.path.isfile(path) and os.access(path, os.X_OK)
+
 
 def main():
     default_outdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outdir')
@@ -101,7 +103,7 @@ def main():
 
             outdir = os.path.join(args.outdir, filename, 'frame_' + str(iteration))
             os.makedirs(outdir, exist_ok=True)
-        
+       
             command = [sys.executable, plugin_script_path, 
                        '--workdir', args.workdir, 
                        '--outdir', outdir, 
@@ -110,8 +112,36 @@ def main():
                        '--asset', asset,
                        '--gpu', str(args.gpu)
                        ]
-            result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
 
+            # try to run program
+            retcode = 1
+            try:
+                result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
+                retcode = result.returncode
+            except subprocess.CalledProcessError as e:
+                retcode = e.returncode
+                print(e)
+
+            # if program failed, we copy to frame_0 to errors/frame_0 for futher investigation
+
+            if retcode != 0:
+                errordir = os.path.join(args.outdir, filename, 'errors', 'frame_' + str(iteration))
+                os.makedirs(errordir, exist_ok=True)
+                shutil.copytree(outdir, errordir, dirs_exist_ok=True)
+
+                # retry to run command
+                try:
+                    result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
+                    retcode = result.returncode
+                except subprocess.CalledProcessError as e:
+                    retcode = e.returncode
+                    print(e)
+
+          
+            # command failed second time, give up
+            if retcode != 0:
+                raise Exception(f"can't run program" + " ".join(command))
+            
             end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time} seconds")
