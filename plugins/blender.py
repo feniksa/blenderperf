@@ -76,6 +76,8 @@ def main():
     parser.add_argument('-p', '--prepare', action='store_true', help='download testing assets and exit')
     parser.add_argument('-i', '--print_assets', action='store_true', help='get list of testing assets')
     parser.add_argument('-e', '--executable', type=str, required=False, help='executable name to run')
+    parser.add_argument('-g', '--gpu', default=0, type=int, help='gpu to render on')
+
 
     args = parser.parse_args()
 
@@ -94,20 +96,16 @@ def main():
         exit(0)
 
 
-    device_type = 'HIP'
     blender_main_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blender_main.py')
 
-    print(args.asset)
-
     script_options = [#'--', 
-                '-scene', args.asset, '-samples', str(args.samples),
-                '-device_type', device_type, '-out', args.outdir]
+                '-scene', args.asset, 
+                '-samples', str(args.samples),
+                '-gpu', str(args.gpu),
+                '-out', args.outdir]
 
     command = [args.executable, '--background', '--factory-startup', '-noaudio', '--enable-autoexec', 
-               '--python', blender_main_script, '--',' '.join(script_options)
-]
-    
-    
+               '--python', blender_main_script, '--',' '.join(script_options)]
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     

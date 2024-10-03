@@ -4,69 +4,89 @@ import sys
 import argparse
 import time
 
-argv = sys.argv
-argv = argv[argv.index("--") + 1:]  # get all args after "--"
+def enable_gpu():
+    bpy.context.scene.cycles.device = "GPU"
 
-parser = argparse.ArgumentParser(prog='blender_main.py', 
-        description='Performance tester')
+def enable_hip():
+    bpy.context.preferences.addons["cycles"].preferences.compute_device_type = 'HIP'
 
-parser.add_argument('-scene', '-c')
-parser.add_argument('-samples', '-s')
-parser.add_argument('-out', '-o')
-parser.add_argument('-device_type', '-t')
+def enable_cuda():
+    bpy.context.preferences.addons["cycles"].preferences.compute_device_type = 'CUDA'
 
-args = parser.parse_args(argv[0].split(' '))
-print(args)
+def is_nvidia_gpu(gpu_name):
+    if gpu_name.startswith('NVIDIA'):
+        return True
+    else:
+        return False
 
-# open blend file
-bpy.ops.wm.open_mainfile(filepath=args.scene)
+def is_amd_gpu(gpu_name):
+    if gpu_name.startswith('AMD Radeon'):
+        return True
+    else:
+        return False
 
-# open scene and set params
-for scene in bpy.data.scenes:
-    scene.cycles.samples = int(args.samples)
-    scene.render.engine = 'CYCLES'
-    scene.cycles.use_denoising = False
-    scene.cycles.use_adaptive_sampling = False
+def process_device(device):
+    device["use"] = 0
+
+    if is_nvidia_gpu(device['name']):
+        print('Enable GPU {} with CUDA'.format(device['name']))
+
+        device['use'] = True
+        enable_cuda()
+
+        return
+
+    if is_amd_gpu(device['name']):
+        print('Enable GPU {} with HIP'.format(device['name']))
+
+        device['use'] = True
+        enable_hip()
+        return
+
+
+def main():
+    argv = sys.argv
+    argv = argv[argv.index("--") + 1:]  # get all args after "--"
+
+    parser = argparse.ArgumentParser(prog='blender_main.py', 
+            description='Performance tester')
+
+    parser.add_argument('-scene', '-c')
+    parser.add_argument('-samples', '-s')
+    parser.add_argument('-out', '-o')
+    #parser.add_argument('-device_type', '-t')
+    parser.add_argument('-gpu', '-g')
+
+    args = parser.parse_args(argv[0].split(' '))
+    print(args)
+
+    # open blend file
+    bpy.ops.wm.open_mainfile(filepath=args.scene)
+
+    # open scene and set params
+    for scene in bpy.data.scenes:
+        scene.cycles.samples = int(args.samples)
+        scene.render.engine = 'CYCLES'
+        scene.cycles.use_denoising = False
+        scene.cycles.use_adaptive_sampling = False
+        
+    enable_gpu()
+
+    # get_devices() to let Blender detects GPU device
+    bpy.context.preferences.addons["cycles"].preferences.get_devices()
+
+    # enable GPU device
+    for device in bpy.context.preferences.addons["cycles"].preferences.devices:
+        process_device(device)
     
 
-#bpy.context.scene.render.engine = 'CYCLES'
+    # set render output and format 
+    bpy.context.scene.render.filepath = str(Path(args.out).resolve() / 'render.png')
+    scene.render.image_settings.file_format = 'PNG'
 
-#bpy.context.user_preferences.addons['cycles'].preferences.devices[0].use = True
-#bpy.context.user_preferences.addons['cycles'].preferences.compute_device_type = "HIP"
+    # render
+    bpy.ops.render.render(write_still=True)
 
-
-# Set the device_type
-bpy.context.preferences.addons[
-    "cycles"
-].preferences.compute_device_type = args.device_type
-
-# Set the device and feature set
-bpy.context.scene.cycles.device = "GPU"
-
-# get_devices() to let Blender detects GPU device
-bpy.context.preferences.addons["cycles"].preferences.get_devices()
-print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
-for d in bpy.context.preferences.addons["cycles"].preferences.devices:
-    d["use"] = 0
-    if d["name"].startswith('AMD Radeon') or d["name"].startswith('NVIDIA') :
-        d["use"] = 1
-    print(d["name"], d["use"])
-
-
-bpy.context.scene.render.filepath = str(Path(args.out).resolve() / 'render.png')
-
-print('----------------  START -----------------')
-time_start = time.time()
-
-scene.render.image_settings.file_format = 'PNG'
-
-bpy.ops.render.render(write_still=True)
-
-#bpy.data.images['Render Result'].save_render(bpy.context.scene.render.filepath)
-
-#exec_time = time.time() - time_start
-#with open(Path(args.out).resolve() / 'render_time.txt', "w") as text_file:
-#    text_file.write("%s\n" % exec_time)
-
-print('----------------  DONE -----------------')
+if __name__ == "__main__":
+    main()
 
