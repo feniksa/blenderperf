@@ -42,7 +42,7 @@ def download_assets(workdir):
 
     plugin_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'utils', 'download_assets.py')
     
-    command = ["python", plugin_script_path, '-u', url, '-d', assets_dir]
+    command = [sys.executable, plugin_script_path, '-u', url, '-d', assets_dir]
     result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
     if result.returncode != 0:
         raise Exception(f"can't download {url}")

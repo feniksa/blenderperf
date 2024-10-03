@@ -70,14 +70,14 @@ def main():
     if not os.path.exists(plugin_script_path):
         raise Exception('plugin not found: ' + plugin_script_path)
 
-    command = ["python", plugin_script_path, '--workdir', args.workdir, '--outdir', args.outdir, '--prepare']
+    command = [sys.executable, plugin_script_path, '--workdir', args.workdir, '--outdir', args.outdir, '--prepare']
     try:
         result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
         #print("Command Output:", result.stdout)
     except subprocess.CalledProcessError as e:
         raise Exception(e.stderr) 
 
-    command = ["python", plugin_script_path, 
+    command = [sys.executable, plugin_script_path, 
                '--workdir', args.workdir, 
                '--outdir', args.outdir, 
                '--print_assets']
@@ -102,7 +102,7 @@ def main():
             outdir = os.path.join(args.outdir, filename, 'frame_' + str(iteration))
             os.makedirs(outdir, exist_ok=True)
         
-            command = ["python", plugin_script_path, 
+            command = [sys.executable, plugin_script_path, 
                        '--workdir', args.workdir, 
                        '--outdir', outdir, 
                        '--executable', args.executable,
