@@ -97,26 +97,33 @@ def main():
     device_type = 'HIP'
     blender_main_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blender_main.py')
 
+    print(args.asset)
+
+    script_options = [#'--', 
+                '-scene', args.asset, '-samples', str(args.samples),
+                '-device_type', device_type, '-out', args.outdir]
+
     command = [args.executable, '--background', '--factory-startup', '-noaudio', '--enable-autoexec', 
-               '--python', blender_main_script, 
-               '--', '-scene', args.asset, '-samples', str(args.samples),
-               '-device_type', device_type, '-out', args.outdir]
+               '--python', blender_main_script, '--',' '.join(script_options)
+]
+    
+    
 
-
-    with open(os.path.join(args.outdir, 'output.log'), 'w') as file:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    
+    with open(os.path.join(args.outdir, 'stdout.log'), 'w') as file:
         for line in process.stdout:
             sys.stdout.write(line)
             sys.stdout.flush()
 
             file.write(line)
+        
+    with open(os.path.join(args.outdir, 'stderr.log'), 'w') as file:
+        for line in process.stderr:
+            sys.stderr.write(line)
+            sys.stderr.flush()
 
-
-        #$BLENDER_EXE --background --factory-startup -noaudio --enable-autoexec --python "$SCRIPT_DIR/blender_main.py" \
-	#-- "-scene $SCENE_FILE -samples $SAMPLES -device_type "$DEVICE_TYPE" -out $OUTDIR" | \
-	#tee "$OUTDIR/log.txt" 
-
+            file.write(line)
 
 if __name__ == "__main__":
     main()
