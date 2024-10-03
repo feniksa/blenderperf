@@ -135,9 +135,6 @@ def main():
         os.makedirs(outdir, exist_ok=True)
         analyze(render_memories, outdir)
 
-        exit(0)
-        
-
 
 if __name__ == "__main__":
     main()
