@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 import glob
 import tarfile
+import re 
+from datetime import datetime, timedelta
 
 
 def get_assets_dir(workdir):
@@ -61,7 +63,62 @@ def print_assets(workdir):
         for blend_file in blend_files:
             print(blend_file)
 
+def create_timestamp(minutes, seconds, milliseconds):
+    # Create a timedelta object
+    delta = timedelta(minutes=minutes, seconds=seconds, milliseconds=milliseconds)
 
+    # Create a reference datetime object (e.g., epoch time)
+    #reference_time = datetime(1970, 1, 1)
+
+    # Add the timedelta to the reference time
+    #timestamp = reference_time + delta
+
+    #return timestamp
+    return delta
+
+# analyze blender stdout and generate summary csv file
+def analyze_blender_output(stdout_file_name):
+    parse_regexp = '^.*\|\sTime:([0-9]+):([0-9]+)\.([0-9]+)\s\|\sMem:([0-9.]+)M,\sPeak:([0-9.]+)M\s\|.*Sample ([0-9]+)\/([0-9]+)$'
+   
+    results = []
+    with open(stdout_file_name, "r") as file:
+        for line in file:
+            dta = re.findall(parse_regexp, line)
+            if not dta:
+                continue
+
+            indata = list(dta[0])
+            results.append({
+                'gpu_m' : indata[0], 
+                'gpu_s' : indata[1], 
+                'gpu_ms' : indata[2], 
+                'gpu_mem_mb' : indata[3], 
+                'gpu_peak_mem_mb' : indata[4],
+                'sample': int(indata[5]),
+                'samples': int(indata[6]),
+                'timestamp': create_timestamp(int(indata[0]), int(indata[1]), int(indata[2])),
+                'memory' : float(indata[3]),
+                'memory_peak' : float(indata[4]),
+                })
+
+    if len(results) < 2:
+        raise Exception('results are empty')
+
+    # check that first sample are rendered
+    if results[0]['sample'] != 0:
+        raise Exception('Not rendered first sample')
+
+    # check that all samples are rendered and present in output
+    if results[0]['samples'] != results[len(results) - 1]['sample']:
+        raise Exception('Not all samples rendered')
+
+    # get overall render time
+    render_time = results[len(results) - 1]['timestamp'] - results[0]['timestamp']
+    memory = results[len(results) - 1]['memory']
+
+    return render_time, memory
+
+    
 def main():
     parser = argparse.ArgumentParser(
         prog='blender.py',
@@ -96,32 +153,49 @@ def main():
         exit(0)
 
 
+    # script executed inside blender
     blender_main_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blender_main.py')
 
-    script_options = [#'--', 
+    # this options goes directly to plugins/blender_main.py
+    script_options = [
                 '-scene', args.asset, 
                 '-samples', str(args.samples),
                 '-gpu', str(args.gpu),
                 '-out', args.outdir]
 
-    command = [args.executable, '--background', '--factory-startup', '-noaudio', '--enable-autoexec', 
-               '--python', blender_main_script, '--',' '.join(script_options)]
+    # this options goes to blender executable
+    command = [args.executable, 
+               '--background', 
+               '--factory-startup', 
+               '-noaudio', 
+               '--enable-autoexec', 
+               '--python', blender_main_script, 
+               '--',' '.join(script_options)]
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     
-    with open(os.path.join(args.outdir, 'stdout.log'), 'w') as file:
+    stdout_file = os.path.join(args.outdir, 'stdout.log')
+    stderr_file = os.path.join(args.outdir, 'stderr.log')
+
+    with open(stdout_file, 'w') as file:
         for line in process.stdout:
             sys.stdout.write(line)
             sys.stdout.flush()
 
             file.write(line)
         
-    with open(os.path.join(args.outdir, 'stderr.log'), 'w') as file:
+    with open(stderr_file, 'w') as file:
         for line in process.stderr:
             sys.stderr.write(line)
             sys.stderr.flush()
 
             file.write(line)
+
+    timestamp, memory = analyze_blender_output(stdout_file)
+    result_text_file = os.path.join(args.outdir, "result.txt")
+    with open(result_text_file, "w") as file:
+        file.write(f"{timestamp} {memory}\n")
+
 
 if __name__ == "__main__":
     main()

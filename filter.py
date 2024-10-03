@@ -3,12 +3,10 @@ import csv
 import sys
 import argparse
 
-# parse blender output
-
 parser = argparse.ArgumentParser(prog='filter.py', description='Filter and prepare results')
 
-parser.add_argument('-input', '-i', required=True)
-parser.add_argument('-csv', '-c', required=True)
+parser.add_argument('--input', '-i', required=True, help='blender stdout for analyze')
+parser.add_argument('--csv', '-c', required=True, help='result of analyse in csv file format')
 
 args = parser.parse_args()
 
