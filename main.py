@@ -3,6 +3,34 @@ import os
 import time
 import subprocess
 import sys
+from datetime import timedelta
+
+def get_render_memory(directory):
+    file_name = os.path.join(directory, 'memory.txt')
+
+    file_contents = '';
+    with open(file_name, "r") as file:
+        file_content = file.read()
+
+    return file_content
+
+def get_render_time(directory):
+    file_name = os.path.join(directory, 'time.txt')
+
+    file_contents = '';
+    with open(file_name, "r") as file:
+        file_content = file.readline().strip()
+        
+    time_parts = file_content.split(":")
+
+    # Extract hours, minutes, seconds, and microseconds
+    hours = int(time_parts[0])
+    minutes = int(time_parts[1])
+    seconds, microseconds = map(int, time_parts[2].split("."))
+
+    timestamp = timedelta(hours=hours, minutes=minutes, seconds=seconds, microseconds=microseconds)
+    return timestamp
+
 
 def check_executable(path: str):
     return os.path.isfile(path) and os.access(path, os.X_OK)
@@ -60,6 +88,10 @@ def main():
         filename = os.path.splitext(os.path.basename(asset))[0]
 
         iteration = 0
+        
+        render_times = []
+        render_memories = []
+
         while iteration < args.repeats:
             iteration += 1
 
@@ -82,7 +114,14 @@ def main():
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time} seconds")
 
-        pass
+            render_time = get_render_time(outdir)
+            render_times.append(render_time)
+
+            render_memory = get_render_memory(outdir)
+            render_memories.append(render_memory)
+
+        exit(0)
+        
 
 
 if __name__ == "__main__":

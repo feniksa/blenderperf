@@ -192,9 +192,14 @@ def main():
             file.write(line)
 
     timestamp, memory = analyze_blender_output(stdout_file)
-    result_text_file = os.path.join(args.outdir, "result.txt")
-    with open(result_text_file, "w") as file:
-        file.write(f"{timestamp} {memory}\n")
+
+    file_name = os.path.join(args.outdir, "time.txt")
+    with open(file_name, "w") as file:
+        file.write(f"{timestamp}\n")
+
+    file_name = os.path.join(args.outdir, "memory.txt")
+    with open(file_name, "w") as file:
+        file.write(f"{memory}\n")
 
 
 if __name__ == "__main__":
