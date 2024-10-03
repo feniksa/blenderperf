@@ -1,6 +1,5 @@
-assets/*
-results/*
-downloads/*
 workdir/*
 outdir/*
 .idea
+*.swp
+__pycache__

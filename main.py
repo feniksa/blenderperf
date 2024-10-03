@@ -5,6 +5,8 @@ import subprocess
 import sys
 from datetime import timedelta
 
+from analyze import *
+
 def get_render_memory(directory):
     file_name = os.path.join(directory, 'memory.txt')
 
@@ -12,7 +14,7 @@ def get_render_memory(directory):
     with open(file_name, "r") as file:
         file_content = file.read()
 
-    return file_content
+    return float(file_content)
 
 def get_render_time(directory):
     file_name = os.path.join(directory, 'time.txt')
@@ -114,11 +116,24 @@ def main():
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time} seconds")
 
+            # read render timings for frame
             render_time = get_render_time(outdir)
-            render_times.append(render_time)
+            render_times.append(render_time.total_seconds())
 
+            # read render vram usage for frame
             render_memory = get_render_memory(outdir)
             render_memories.append(render_memory)
+
+        # analyze render times for all frames
+        outdir = os.path.join(args.outdir, filename, 'render')
+        os.makedirs(outdir, exist_ok=True)
+        analyze(render_times, outdir) 
+
+
+        # analyze vram usage times for all frames
+        outdir = os.path.join(args.outdir, filename, 'memory')
+        os.makedirs(outdir, exist_ok=True)
+        analyze(render_memories, outdir)
 
         exit(0)
         
