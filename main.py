@@ -65,7 +65,8 @@ def main():
 
             start_time = time.time()
 
-            outdir = args.outdir
+            outdir = os.path.join(args.outdir, filename, 'frame_' + str(iteration))
+            os.makedirs(outdir, exist_ok=True)
         
             command = ["python", plugin_script_path, 
                        '--workdir', args.workdir, 
@@ -81,7 +82,8 @@ def main():
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time} seconds")
 
-            exit(0)
+        pass
+
 
 if __name__ == "__main__":
     main()

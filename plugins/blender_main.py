@@ -58,7 +58,6 @@ def main():
     parser.add_argument('-gpu', '-g')
 
     args = parser.parse_args(argv[0].split(' '))
-    print(args)
 
     # open blend file
     bpy.ops.wm.open_mainfile(filepath=args.scene)
@@ -69,7 +68,8 @@ def main():
         scene.render.engine = 'CYCLES'
         scene.cycles.use_denoising = False
         scene.cycles.use_adaptive_sampling = False
-        
+
+    # enable gpu acceleration
     enable_gpu()
 
     # get_devices() to let Blender detects GPU device
