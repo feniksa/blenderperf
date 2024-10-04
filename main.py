@@ -119,7 +119,7 @@ def main():
                 result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
                 retcode = result.returncode
             except subprocess.CalledProcessError as e:
-                retcode = e.returncode
+                retcode = 1
                 print(e)
 
             # if program failed, we copy to frame_0 to errors/frame_0 for futher investigation
@@ -134,7 +134,7 @@ def main():
                     result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
                     retcode = result.returncode
                 except subprocess.CalledProcessError as e:
-                    retcode = e.returncode
+                    retcode = 1
                     print(e)
 
           
