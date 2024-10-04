@@ -57,9 +57,9 @@ def analyze(arr, outdir):
     plt.figure()
 
     plt.plot(data)
-    plt.title('values')
-    plt.xlabel('X')
-    plt.ylabel('Y')
+    plt.title('Data Plot')
+    plt.xlabel('iteration')
+    plt.ylabel('value')
     plt.legend()
     plt.savefig(os.path.join(outdir, 'data.png'))
 
