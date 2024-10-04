@@ -1,4 +1,4 @@
-# GPU Performance Measurement Tool
+# GPU Performance Measurement Tool
 
 This tool is designed to measure the performance of GPUs on both Linux and Windows platforms using **Blender** as the benchmarking software. The tool supports performance measurements for **NVIDIA** and **AMD** GPUs.
 
