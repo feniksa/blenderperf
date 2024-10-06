@@ -17,10 +17,14 @@ def dump_device(device, outdir):
 def dump_blender_version(outdir):
     
     blender_version = bpy.app.version_string
+    blender_hash = bpy.app.build_hash
+    blender_build_date = bpy.app.build_date
 
     file_name = os.path.join(outdir, "version.txt")
     with open(file_name, "w") as file:
         file.write(f"{blender_version}\n")
+        file.write(f"{blender_hash}\n")
+        file.write(f"{blender_build_date}\n")
 
 
 def main():

@@ -6,6 +6,12 @@ import sys
 
 from analyze import *
 
+def save2file(data, outdir):
+    file_name = os.path.join(outdir, 'data.txt')
+    with open(file_name, "w") as file:
+        for d in data:
+            file.write(f"{d}\n")
+
 def get_render_memory(directory):
     file_name = os.path.join(directory, 'memory.txt')
 
@@ -178,12 +184,15 @@ def main():
         # analyze render times for all frames
         outdir = os.path.join(args.outdir, filename, 'render')
         os.makedirs(outdir, exist_ok=True)
+
+        save2file(render_times, outdir)
         analyze(render_times, outdir) 
 
 
         # analyze vram usage times for all frames
         outdir = os.path.join(args.outdir, filename, 'memory')
         os.makedirs(outdir, exist_ok=True)
+        save2file(render_memories, outdir)
         analyze(render_memories, outdir)
 
 
