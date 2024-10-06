@@ -14,6 +14,15 @@ def dump_device(device, outdir):
     with open(file_name, "w") as file:
         file.write(f"{device_name}\n")
 
+def dump_devices(devices, outdir):
+    file_name = os.path.join(outdir, "gpus.txt")
+    with open(file_name, "w") as file:
+        device_index = 0
+        for device in devices:
+            device_name = device['name']
+            file.write(f"{device_index}\t{device_name}\n")
+            device_index += 1
+
 def dump_blender_version(outdir):
     
     blender_version = bpy.app.version_string
@@ -53,6 +62,7 @@ def main():
     if args.gpu > len(devices):
         raise Exception("No GPU devices found")
 
+    dump_devices(devices, args.out)
     dump_device(devices[args.gpu], args.out)
     dump_blender_version(args.out)
     
