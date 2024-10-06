@@ -64,6 +64,8 @@ def main():
     parser.add_argument('-samples', '-s')
     parser.add_argument('-out', '-o')
     parser.add_argument('-gpu', '-g', type=int)
+    parser.add_argument('-resolution_x', '-x', type=int, default=1024)
+    parser.add_argument('-resolution_y', '-y', type=int, default=768)
 
     args = parser.parse_args(argv[0].split(' '))
 
@@ -74,6 +76,8 @@ def main():
     for scene in bpy.data.scenes:
         scene.cycles.samples = int(args.samples)
         scene.render.engine = 'CYCLES'
+        scene.render.resolution_x = args.resolution_x
+        scene.render.resolution_y = args.resolution_y
         scene.cycles.use_denoising = False
         scene.cycles.use_adaptive_sampling = False
         scene.render.image_settings.file_format = 'PNG'

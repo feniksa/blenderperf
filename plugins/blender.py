@@ -128,6 +128,8 @@ def main():
     parser.add_argument('-e', '--executable', type=str, required=False, help='executable name to run')
     parser.add_argument('-g', '--gpu', default=0, type=int, help='gpu to render on')
     parser.add_argument('-d', '--dump_environment', required=False, action='store_true', help='dump os system vers, cpu, etc')
+    parser.add_argument('-x', '--width', type=int, default=1024, help='render image width')
+    parser.add_argument('-y', '--height', type=int, default=768, help='render image height')
 
     args = parser.parse_args()
 
@@ -158,7 +160,9 @@ def main():
                 '-scene', args.asset, 
                 '-samples', str(args.samples),
                 '-gpu', str(args.gpu),
-                '-out', args.outdir]
+                '-out', args.outdir,
+                '-resolution_x', str(args.width),
+                '-resolution_y', str(args.height)]
 
     # this options goes to blender executable
     command = [args.executable, 

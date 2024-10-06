@@ -89,6 +89,8 @@ def main():
     parser.add_argument('-p', '--plugin', default='blender', type=str, help='plugin to load')
     parser.add_argument('-g', '--gpu', default=0, type=int, help='gpu to render on')
     parser.add_argument('-c', '--clean', default=1, type=int, help='clean outdir')
+    parser.add_argument('-x', '--width', type=int, default=3840, help='render image width')
+    parser.add_argument('-y', '--height', type=int, default=2160, help='render image height')
 
     args = parser.parse_args()
 
@@ -138,7 +140,9 @@ def main():
                        '--executable', args.executable,
                        '--samples', str(args.samples),
                        '--asset', asset,
-                       '--gpu', str(args.gpu)
+                       '--gpu', str(args.gpu),
+                       '--width', str(args.width),
+                       '--height', str(args.height),
                        ]
 
             # try to run program
