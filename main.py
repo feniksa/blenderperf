@@ -1,17 +1,14 @@
 import argparse
-import os
 import time
 import subprocess
 import shutil
 import sys
-from datetime import timedelta
 
 from analyze import *
 
 def get_render_memory(directory):
     file_name = os.path.join(directory, 'memory.txt')
 
-    file_contents = '';
     with open(file_name, "r") as file:
         file_content = file.read()
 
@@ -20,7 +17,6 @@ def get_render_memory(directory):
 def get_render_time(directory):
     file_name = os.path.join(directory, 'time.txt')
 
-    file_contents = '';
     with open(file_name, "r") as file:
         file_content = file.readline().strip()
         
@@ -38,6 +34,37 @@ def get_render_time(directory):
 def check_executable(path: str):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
+def run_prepare_command(script_path, workdir, outdir):
+    command = [sys.executable, script_path, '--workdir', workdir, '--outdir', outdir, '--prepare']
+    try:
+        result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
+        # print("Command Output:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        raise Exception(e.stderr)
+
+def get_assets_list(script_path, workdir, outdir) -> list[str]:
+    command = [sys.executable, script_path,
+               '--workdir', workdir,
+               '--outdir', outdir,
+               '--print_assets']
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise Exception('no assets to test')
+
+    return result.stdout.splitlines()
+
+def dump_environment(executable_path, script_path, workdir, outdir):
+    command = [sys.executable,
+               script_path,
+               '--executable', executable_path,
+               '--workdir', workdir,
+               '--outdir', outdir,
+               '--dump_environment']
+    try:
+        result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
+        # print("Command Output:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        raise Exception(e.stderr)
 
 def main():
     default_outdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outdir')
@@ -55,7 +82,7 @@ def main():
     parser.add_argument('-w', '--workdir', default = default_workdir, type=str, help='working directory for assets and temporary files')
     parser.add_argument('-p', '--plugin', default='blender', type=str, help='plugin to load')
     parser.add_argument('-g', '--gpu', default=0, type=int, help='gpu to render on')
-
+    parser.add_argument('-c', '--clean', default=1, type=int, help='clean outdir')
 
     args = parser.parse_args()
 
@@ -72,23 +99,18 @@ def main():
     if not os.path.exists(plugin_script_path):
         raise Exception('plugin not found: ' + plugin_script_path)
 
-    command = [sys.executable, plugin_script_path, '--workdir', args.workdir, '--outdir', args.outdir, '--prepare']
-    try:
-        result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
-        #print("Command Output:", result.stdout)
-    except subprocess.CalledProcessError as e:
-        raise Exception(e.stderr) 
+    if args.clean:
+        shutil.rmtree(args.outdir)
+        os.makedirs(args.outdir)
+        with open(os.path.join(args.outdir, '.keepme'), "w") as file:
+            pass
 
-    command = [sys.executable, plugin_script_path, 
-               '--workdir', args.workdir, 
-               '--outdir', args.outdir, 
-               '--print_assets']
-    result = subprocess.run(command, check=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise Exception('no assets to test')
+    run_prepare_command(plugin_script_path, args.workdir, args.outdir)
+    dump_environment(args.executable, plugin_script_path, args.workdir, args.outdir)
 
-    output_str = result.stdout
-    for asset in output_str.splitlines():
+    assets_path = get_assets_list(plugin_script_path, args.workdir, args.outdir)
+
+    for asset in assets_path:
         filename = os.path.splitext(os.path.basename(asset))[0]
 
         iteration = 0
@@ -114,7 +136,6 @@ def main():
                        ]
 
             # try to run program
-            retcode = 1
             try:
                 result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
                 retcode = result.returncode
@@ -137,11 +158,11 @@ def main():
                     retcode = 1
                     print(e)
 
-          
+
             # command failed second time, give up
             if retcode != 0:
                 raise Exception(f"can't run program" + " ".join(command))
-            
+
             end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time} seconds")

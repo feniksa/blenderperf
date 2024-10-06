@@ -1,67 +1,60 @@
 import argparse
 import os
-import time
 import subprocess
 import sys
-from pathlib import Path
-import glob
-import tarfile
+
 import re 
-from datetime import datetime, timedelta
+from datetime import timedelta
+import platform
+import psutil
+
+from blender_assets import prepare_assets, print_assets
 
 
-def get_assets_dir(workdir):
-    assets_dir = os.path.join(workdir, 'assets')
+def dump_environment(blender_exe, workdir, outdir):
+    envdir = os.path.join(outdir, 'environment')
+    os.makedirs(envdir, exist_ok=True)
 
-    return assets_dir
+    # Gather system information
+    cpu_info = platform.processor()
+    ram_info = str(round(psutil.virtual_memory().total / (1024 ** 3))) + " GB"
+    os_info = platform.system() + " " + platform.release()
 
-def unpack_assets(workdir):
-    directory = get_assets_dir(workdir)
+    filename = os.path.join(envdir, "cpu.txt")
+    with open(filename, "w") as file:
+        file.write(f"{cpu_info}\n")
 
-    tar_bz2_files = glob.glob(os.path.join(directory, "*.tar.bz2"))
+    filename = os.path.join(envdir, "ram.txt")
+    with open(filename, "w") as file:
+        file.write(f"{ram_info}\n")
 
-    for tar_bz2_file in tar_bz2_files:
-        timestamp_file = tar_bz2_file + '.unpk'
-        if os.path.exists(timestamp_file):
-            continue
-            
-        print(f'unpack {tar_bz2_file}')
-        with tarfile.open(tar_bz2_file, "r:bz2") as tar:
-            tar.extractall(path=directory)
+    filename = os.path.join(envdir, "os.txt")
+    with open(filename, "w") as file:
+        file.write(f"{os_info}\n")
 
-        with open(timestamp_file, 'w') as file:
-            pass
+    script_args = [
+       '-gpu', str(0),
+       '-out', envdir
+    ]
 
+    blender_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blender_env.py')
+    command = [blender_exe,
+               '--background',
+               '--factory-startup',
+               '-noaudio',
+               '--python', blender_script,
+               '--', ' '.join(script_args)]
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        stdout, stderr = process.communicate()
+        return_code = process.returncode
+        if return_code != 0:
+            raise Exception(stderr)
 
-def download_assets(workdir):
-    url = 'https://200volts.com/blenderperf/assets'
+    except subprocess.CalledProcessError as e:
+        print("can't get blender info")
+        raise
 
-    assets_dir = get_assets_dir(workdir)
-
-    os.makedirs(assets_dir, exist_ok=True)
-
-    plugin_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'utils', 'download_assets.py')
-    
-    command = [sys.executable, plugin_script_path, '-u', url, '-d', assets_dir]
-    result = subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
-    if result.returncode != 0:
-        raise Exception(f"can't download {url}")
-
-
-def prepare_assets(workdir):
-    download_assets(workdir)
-    unpack_assets(workdir)
-
-def print_assets(workdir):
-    directory = get_assets_dir(workdir)
-
-    subdirs = [d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))]
-    for subdir in subdirs:
-        blend_files = glob.glob(os.path.join(directory, subdir, "*.blend"))
-
-        # Print the list of .blend files
-        for blend_file in blend_files:
-            print(blend_file)
 
 def create_timestamp(minutes, seconds, milliseconds):
     # Create a timedelta object
@@ -134,7 +127,7 @@ def main():
     parser.add_argument('-i', '--print_assets', action='store_true', help='get list of testing assets')
     parser.add_argument('-e', '--executable', type=str, required=False, help='executable name to run')
     parser.add_argument('-g', '--gpu', default=0, type=int, help='gpu to render on')
-
+    parser.add_argument('-d', '--dump_environment', required=False, action='store_true', help='dump os system vers, cpu, etc')
 
     args = parser.parse_args()
 
@@ -146,6 +139,10 @@ def main():
 
     if args.prepare:
         prepare_assets(args.workdir)
+        exit(0)
+
+    if args.dump_environment:
+        dump_environment(args.executable, args.workdir, args.outdir)
         exit(0)
 
     if args.print_assets:

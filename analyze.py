@@ -36,6 +36,7 @@ def analyze(arr, outdir):
     plt.xlabel('Value')
     plt.ylabel('Frequency')
     plt.savefig(os.path.join(outdir, 'distribution.png'))
+    plt.close()
 
     # Box plot to visualize the spread and outliers
     plt.figure(figsize=(10, 6))
@@ -44,6 +45,7 @@ def analyze(arr, outdir):
     plt.title('Box Plot')
     plt.xlabel('Value')
     plt.savefig(os.path.join(outdir, 'box_plot.png'))
+    plt.close()
 
     # Identify outliers using z-score
     z_scores = (data - mean) / std_dev
@@ -62,4 +64,5 @@ def analyze(arr, outdir):
     plt.ylabel('value')
     plt.legend()
     plt.savefig(os.path.join(outdir, 'data.png'))
+    plt.close()
 

@@ -62,3 +62,37 @@ python main.py -e /path/to/blender
 ```
 Once the program completes, check the _outdir_ folder for detailed performance results.
 
+# Plugins
+
+Plugin for specific software in directory `plugin`. Plugin is separate command that should support such params:
+
+## Required supported parameters
+
+| Long parameter     | Short Parameter | Usage                                                                         |
+|--------------------|-----------------|-------------------------------------------------------------------------------|
+| --samples          | -s              | number of samples to run                                                      |
+| --outdir           | -o              | output directory for render, reports, etc                                     |
+| --workdir          | -w              | working directory for assets, temporary files                                 |
+| --asset            | -a              | asset to render. Mostly this is path to file to be rendered                   |
+| --prepare          | -p              | prepare assets (download), create nececcary files, etc                        |
+| --print_assets     | -p              | print list of assets to be rendered. Each file should be in newline           |
+| --executable       | -e              | path to executable to run                                                     |
+| --gpu              | -g              | gpu number on what to render                                                  |
+| --dump_environment | -d              | dump to directory outdir/environment software ver., gpu and other information |
+
+## Expected plugin output
+
+List of files, that plugin should return
+
+`outdir/asset_name/frame_N` directory for each sample. **N == samples**
+
+Each `frame_N` must contain:
+
+| File                        | Definition                                    |
+|-----------------------------|-----------------------------------------------|
+| `render.jpg` or `render.png` | result of rendering                           |
+| `time.txt`                  | time in seconds required for rendering        |
+| `memory.txt`                | maximum amount of VRAM required for rendering |
+| `stdout.log`                | program stdout.log                            |
+| `stderr.log`                | program stderr.log                            |
+
