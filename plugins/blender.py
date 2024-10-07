@@ -192,11 +192,15 @@ def main():
 
             file.write(line)
 
-    timestamp, memory = analyze_blender_output(stdout_file)
+    td, memory = analyze_blender_output(stdout_file)
+    
+    days = td.days
+    seconds = td.seconds
+    microseconds = td.microseconds
 
     file_name = os.path.join(args.outdir, "time.txt")
     with open(file_name, "w") as file:
-        file.write(f"{timestamp}\n")
+        file.write(f"{days}:{seconds}:{microseconds}")
 
     file_name = os.path.join(args.outdir, "memory.txt")
     with open(file_name, "w") as file:

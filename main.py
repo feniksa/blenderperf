@@ -25,15 +25,10 @@ def get_render_time(directory):
 
     with open(file_name, "r") as file:
         file_content = file.readline().strip()
-        
-    time_parts = file_content.split(":")
 
-    # Extract hours, minutes, seconds, and microseconds
-    hours = int(time_parts[0])
-    minutes = int(time_parts[1])
-    seconds, microseconds = map(int, time_parts[2].split("."))
+    days, seconds, microseconds = map(int, file_content.split(':'))
 
-    timestamp = timedelta(hours=hours, minutes=minutes, seconds=seconds, microseconds=microseconds)
+    timestamp = timedelta(days=days, seconds=seconds, microseconds=microseconds)
     return timestamp
 
 
