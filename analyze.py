@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def analyze_timings(render_times, outdir):
-    pass
-
-
+# static analysis of data, provided in arr
 def analyze(arr, outdir):
     data = np.array(arr)
 
