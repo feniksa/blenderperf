@@ -2,6 +2,7 @@ import argparse
 import os
 
 import requests
+import urllib.parse import urljoin
 
 def get_scene_report(scene_dir):
     pass
@@ -31,12 +32,17 @@ def main():
 
     args = parser.parse_args()
 
-    get_assets_list(args.outdir)
+    #get_assets_list(args.outdir)
+    
+    urljoin(args.url, 'gpuperf/report/create')
+    
+
     exit(0)
 
     data = {
         "apikey": "qqqqqqqqq",
-        "key2": "value2"
+        "application": "blender"
+        "application_hash": "123"
     }
 
     # Send the POST request and capture the response
