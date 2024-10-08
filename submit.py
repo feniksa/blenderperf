@@ -1,8 +1,9 @@
 import argparse
 import os
+import json
 
 import requests
-import urllib.parse import urljoin
+from urllib.parse import urljoin
 
 def get_scene_report(scene_dir):
     pass
@@ -23,7 +24,7 @@ def main():
         description='e test for application',
         epilog='for more information: https://github.com/feniksa/blenderperf')
 
-    default_url = 'https://200volts.com'
+    default_url = 'http://localhost:8000'
     default_outdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outdir')
 
     parser.add_argument('-u', '--url', default=default_url, type=str, help='url for upload')
@@ -34,19 +35,15 @@ def main():
 
     #get_assets_list(args.outdir)
     
-    urljoin(args.url, 'gpuperf/report/create')
-    
-
-    exit(0)
+    url = urljoin(args.url, 'gpuperf/api/report/create')
 
     data = {
-        "apikey": "qqqqqqqqq",
-        "application": "blender"
-        "application_hash": "123"
+        "application": "blender",
+        "application_hash": "123",
     }
 
     # Send the POST request and capture the response
-    response = requests.post(args.url, json=data)
+    response = requests.post(url, json.dumps(data))
 
     # Check if the request was successful
     if response.status_code == 200:
