@@ -12,6 +12,12 @@ def save2file(data, outdir):
         for d in data:
             file.write(f"{d}\n")
 
+def save_assets_list_to_file(assets, outdir):
+    file_name = os.path.join(outdir, 'assets.txt')
+    with open(file_name, "w") as file:
+        for asset in assets:
+            file.write(f"{asset}\n")
+
 def get_render_memory(directory):
     file_name = os.path.join(directory, 'memory.txt')
 
@@ -112,6 +118,7 @@ def main():
     dump_environment(args.executable, plugin_script_path, args.workdir, args.outdir)
 
     assets_path = get_assets_list(plugin_script_path, args.workdir, args.outdir)
+    save_assets_list_to_file(assets_path, args.outdir)
 
     for asset in assets_path:
         filename = os.path.splitext(os.path.basename(asset))[0]
@@ -140,7 +147,7 @@ def main():
                        '--height', str(args.height),
                        ]
 
-            # try to run program
+            print(f'Render scene {asset}, iteration {iteration}')
             try:
                 result = subprocess.run(command, stdout=sys.stdout, stderr=sys.stderr)
                 retcode = result.returncode
