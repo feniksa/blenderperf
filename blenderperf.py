@@ -69,6 +69,22 @@ class Api:
 
 
 
+    def download_file(self, file_path, filename):
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+    
+            file_length = int(r.headers['Content-Length'])
+            downloaded = 0
+    
+            with open(filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    print('{}/{}'.format(downloaded, file_length), end="\x1b[1G")
+                print('')
+
+
+
     def get_application_hash(self, application_name:str):
         return ''
 
@@ -177,7 +193,7 @@ def main():
 
     jobs = api.get_node_jobs()
     for job in jobs:
-        #print(job)
+        print(job)
         job_id = job.get("id")
         tasks = api.get_node_tasks(job_id)
         for task in tasks:

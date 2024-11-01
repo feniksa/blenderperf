@@ -26,6 +26,22 @@ class Api:
         self.url = url
         self.api_key = api_key
 
+    def download_file(self, url, filename)
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+
+            file_length = int(r.headers['Content-Length'])
+            downloaded = 0
+
+            with open(filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    print('{}/{}'.format(downloaded, file_length), end="\x1b[1G")
+                print('')
+
+
+
     def get_application_hash(self, application_name:str):
         return ''
 
