@@ -52,6 +52,24 @@ class Api:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
 
+    def task_change_status(self, task_id, status):
+        url = urljoin(self.url, 'gpuperf/nodeapi/task/status/change')
+        data = {
+            self.__key_api: self.api_key,
+            'task_id': task_id, 
+            'status': status,
+        }
+
+        response = requests.post(url, json.dumps(data))
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            return response.json().get("jobs")
+        else:
+            print("Failed:", response.status_code, response.message)
+            raise Exception(response.message)
+
+
     def get_node_tasks(self, job_id):
         url = urljoin(self.url, 'gpuperf/nodeapi/tasks')
         data = {
@@ -191,14 +209,17 @@ def main():
         print(reply)
         return 0
 
+
     jobs = api.get_node_jobs()
     for job in jobs:
-        print(job)
+        #print(job)
+
         job_id = job.get("id")
         tasks = api.get_node_tasks(job_id)
         for task in tasks:
             print(task)
             print('\n')
+            api.task_change_status(task.get('id'), 'failed')
     
 
     #report_id = api_create_report(args.url, args.apikey, 'blender', '123')
