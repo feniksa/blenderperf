@@ -10,6 +10,8 @@ import tarfile
 from pathlib import Path
 from urllib.parse import urljoin
 from api import Api
+from storage import Storage
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -31,7 +33,10 @@ def main():
 
     args = parser.parse_args()
 
-    api = Api(args.url, args.apikey, args.workdir, args.cachedir)
+    cache = Storage(args.cachedir)
+    workdir = Storage(args.workdir)
+
+    api = Api(args.url, args.apikey)
 
     if args.ping:
         reply = api.ping()
@@ -57,32 +62,37 @@ def main():
                     server_file_name = task.get('file_name')
                     server_file_hash = task.get('file_hash')
 
-                    print(f"download asset {server_file_name}")
-                    api.download_file(server_file_name, server_file_path, server_file_hash, True)
+                    print(f"download asset {server_file_path}")
+
+                    asset_file = cache.download(api.get_url(server_file_path), 'downloads', server_file_hash)
+                    print(f"saved to {asset_file}")
+
                     api.task_change_status(task.get('id'), 'success')
 
-                case 'unzip':
-                    file_name = api.get_filepath(task.get('file_name'), True)
-                    if not os.path.exists(file_name):
-                        api.task_change_status(task.get('id'), 'failed')
-                        raise Exception(f"fail to unpack file {file_name}")
-
-                    api.unpack(file_name, api.workdir)
-                    api.task_change_status(task.get('id'), 'success')
-                case 'execute':
-
-                    file_name = os.path.join(api.cachedir,task.get('file_name'))
-                    
+                case 'unpack':
+                    server_file_path = task.get('file_url')
                     server_file_name = task.get('file_name')
-                    server_file_url = task.get('file_url')
                     server_file_hash = task.get('file_hash')
 
-                    dst_file = api.download_file(server_file_name, server_file_url, server_file_hash)
+                    file_path = cache.resolve_file_path(server_file_path, 'downloads')
+
+                    try:
+                        cache.unpack(file_path, 'assets', server_file_hash)
+                        api.task_change_status(task.get('id'), 'success')
+                    except Exception as e:
+                        api.task_change_status(task.get('id'), 'failed')
+
+                case 'execute':
+                    server_file_path = task.get('file_url')
+                    server_file_name = task.get('file_name')
+                    server_file_hash = task.get('file_hash')
+
+                    file_path = cache.resolve_file_path(server_file_path, 'downloads')
 
                     inputs = job.get('inputs')
                     task_params = task.get('task_params')
 
-                    command = [ sys.executable, dst_file,
+                    command = [ sys.executable, file_path,
                                '--url', args.url,
                                '--apikey', args.apikey,
                                '--cachedir', args.cachedir,
@@ -99,10 +109,12 @@ def main():
                                 env=env,
                                 stdout=sys.stdout, 
                                 stderr=sys.stderr)
+
+                        if result.returncode == 0:
+                            api.task_change_status(task.get('id'), 'success')
                     except subprocess.CalledProcessError as e:
                         print(e)
-
-                    #api.task_change_status(task.get('id'), 'success')
+                        #api.task_change_status(task.get('id'), 'failed')
 
 
     #report_id = api_create_report(args.url, args.apikey, 'blender', '123')

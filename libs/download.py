@@ -28,16 +28,19 @@ def main():
     server_file_name = ''
     server_file_url = ''
     server_file_hash = ''
-    iterations = 0
-    samples = 0
 
-    params = json.loads(args.inputs) 
-    for param in params:
-        match param['name']:
+    inputs = json.loads(args.inputs) 
+    params = json.loads(args.params) 
+
+    for _input in inputs:
+        match _input['name']:
             case 'exe':
-                server_file_name = param['value']['name']
-                server_file_url = param['value']['url']
-                server_file_hash = param['value']['hash']
+                server_file_name = _input['value']['name']
+                server_file_url = _input['value']['url']
+                server_file_hash = _input['value']['hash']
+
+    if server_file_name == '' or server_file_hash == '' or server_file_url == '':
+        raise Exception('no required parameter')
             
     arch = api.download_file(server_file_name, server_file_url, server_file_hash)
     api.unpack(arch)
