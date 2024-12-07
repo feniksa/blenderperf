@@ -1,5 +1,6 @@
 workdir/*
 outdir/*
+cachedir/*
 .idea
 *.swp
 __pycache__
