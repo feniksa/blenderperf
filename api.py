@@ -41,19 +41,19 @@ class Api:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
     
-    def get_node_jobs(self):
-        url = self.get_url('gpuperf/nodeapi/jobs')
-        data = {
-            self.__key_api: self.api_key
-        }
-        response = requests.post(url, json.dumps(data))
-        response.raise_for_status()
+    #def get_node_jobs(self):
+    #    url = self.get_url('gpuperf/nodeapi/jobs')
+    #    data = {
+    #        self.__key_api: self.api_key
+    #    }
+    #    response = requests.post(url, json.dumps(data))
+    #    response.raise_for_status()
 
-        if response.status_code == 200:
-            return response.json().get("jobs")
-        else:
-            print("Failed:", response.status_code, response.message)
-            raise Exception(response.message)
+    #    if response.status_code == 200:
+    #        return response.json().get("jobs")
+    #    else:
+    #        print("Failed:", response.status_code, response.message)
+    #        raise Exception(response.message)
 
     def task_change_status(self, task_id, status):
         url = self.get_url('gpuperf/nodeapi/task/status/change')
@@ -72,21 +72,52 @@ class Api:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
 
-
-    def get_node_tasks(self, node_job_id):
-        url = self.get_url('gpuperf/nodeapi/tasks')
+    def get_node_task(self):
+        url = self.get_url('gpuperf/nodeapi/task')
         data = {
             self.__key_api: self.api_key,
-            'node_job_id': node_job_id,
         }
         response = requests.post(url, json.dumps(data))
         response.raise_for_status()
 
         if response.status_code == 200:
-            return response.json().get('tasks')
+            return response.json().get('task')
         else:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
+
+    def post_task_data(self, task_id, metric, data):
+        url = self.get_url('gpuperf/nodeapi/task/postdata')
+        data = {
+            self.__key_api: self.api_key,
+            'task_id': task_id, 
+            'metric': metric,
+            'data':  data,
+        }
+        response = requests.post(url, json.dumps(data))
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Failed:", response.status_code, response.message)
+            raise Exception(response.message)
+
+
+    #def get_node_tasks(self, node_job_id):
+    #    url = self.get_url('gpuperf/nodeapi/tasks')
+    #    data = {
+    #        self.__key_api: self.api_key,
+    #        'node_job_id': node_job_id,
+    #    }
+    #    response = requests.post(url, json.dumps(data))
+    #    response.raise_for_status()
+
+    #    if response.status_code == 200:
+    #        return response.json().get('tasks')
+    #    else:
+    #        print("Failed:", response.status_code, response.message)
+    #        raise Exception(response.message)
 
 
 #    def create_report(self, application:str):

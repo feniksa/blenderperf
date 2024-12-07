@@ -11,6 +11,59 @@ from pathlib import Path
 from urllib.parse import urljoin
 from api import Api
 from storage import Storage
+import tempfile
+import time
+
+
+def execute_task(args, api, task):
+    procedure = task.get('procedure_name')
+    code = task.get('procedure_code')
+
+    inputs = task.get('inputs')
+
+    print(f"execute \"{procedure}\" procedure")
+
+    with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_file:
+        temp_file.write(code)
+        temp_file.flush()
+
+        command = [ sys.executable, temp_file.name,
+                               '--url', args.url,
+                               '--apikey', args.apikey,
+                               '--cachedir', args.cachedir,
+                               '--workdir', args.workdir,
+                               '--inputs', str(json.dumps(inputs)),
+                               ]
+
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.dirname(os.path.realpath(__file__))
+
+        try:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, universal_newlines=True)
+
+            # Read stdout and stderr
+            stdout, stderr = process.communicate()
+
+            # Decode and print outputs
+            #stdout = stdout.decode('utf-8')
+            #stderr = stderr.decode('utf-8')
+
+            print(stdout)
+            print(stderr)
+                        
+            api.post_task_data(task.get('id'), 'stdout', stdout)
+            api.post_task_data(task.get('id'), 'stderr', stderr)
+
+            if process.returncode == 0:
+                api.task_change_status(task.get('id'), 'success')
+            else:
+                api.task_change_status(task.get('id'), 'failed')
+
+            api.post_task_data(task.get('id'), 'returncode', str(process.returncode))
+
+        except subprocess.CalledProcessError as e:
+            api.post_task_data(task.get('id'), 'stderr', str(e))
+            api.task_change_status(task.get('id'), 'failed')
 
 
 def main():
@@ -43,84 +96,26 @@ def main():
         print(reply)
         return 0
 
+    while True:
+        start_time = time.time()  
 
-    jobs = api.get_node_jobs()
-    for job in jobs:
-        print("job {} {}".format(job.get('job_id'), job.get('name')))
+        try: 
+            print('get task from server')
+            task = api.get_node_task()
+            if task:
+                execute_task(args, api, task)
+        except KeyboardInterrupt:
+            return 0
+        except requests.exceptions.ConnectionError:
+            print('connection error. Retry')
+            pass
 
-        node_job_id = job.get("id")
+        execution_time = time.time() - start_time  # Measure execution time
 
-        #TODO: use getnodetask in loop.
-        tasks = api.get_node_tasks(node_job_id)
-        for task in tasks:
-            api.task_change_status(task.get('id'), 'in_progress')
-
-            action = task.get('action', '')
-            match action:
-                case 'download':
-                    server_file_path = task.get('file_url')
-                    server_file_name = task.get('file_name')
-                    server_file_hash = task.get('file_hash')
-
-                    print(f"download asset {server_file_path}")
-
-                    asset_file = cache.download(api.get_url(server_file_path), 'downloads', server_file_hash)
-                    print(f"saved to {asset_file}")
-
-                    api.task_change_status(task.get('id'), 'success')
-
-                case 'unpack':
-                    server_file_path = task.get('file_url')
-                    server_file_name = task.get('file_name')
-                    server_file_hash = task.get('file_hash')
-
-                    file_path = cache.resolve_file_path(server_file_path, 'downloads')
-
-                    try:
-                        cache.unpack(file_path, 'assets', server_file_hash)
-                        api.task_change_status(task.get('id'), 'success')
-                    except Exception as e:
-                        api.task_change_status(task.get('id'), 'failed')
-
-                case 'execute':
-                    server_file_path = task.get('file_url')
-                    server_file_name = task.get('file_name')
-                    server_file_hash = task.get('file_hash')
-
-                    file_path = cache.resolve_file_path(server_file_path, 'downloads')
-
-                    inputs = job.get('inputs')
-                    task_params = task.get('task_params')
-
-                    command = [ sys.executable, file_path,
-                               '--url', args.url,
-                               '--apikey', args.apikey,
-                               '--cachedir', args.cachedir,
-                               '--workdir', args.workdir,
-                               '--inputs', json.dumps(inputs),
-                               '--params', json.dumps(task_params) ]
-
-                    env = os.environ.copy()
-                    env["PYTHONPATH"] = os.path.dirname(os.path.realpath(__file__))
-
-                    try:
-                        result = subprocess.run(                                
-                                command,
-                                env=env,
-                                stdout=sys.stdout, 
-                                stderr=sys.stderr)
-
-                        if result.returncode == 0:
-                            api.task_change_status(task.get('id'), 'success')
-                    except subprocess.CalledProcessError as e:
-                        print(e)
-                        #api.task_change_status(task.get('id'), 'failed')
-
-
-    #report_id = api_create_report(args.url, args.apikey, 'blender', '123')
-    #print(report_id)
-
-    #gpu_report_id = api_create_gpu_report(args.url, report_id)
+        sleep_time = max(0, 1 - execution_time)
+        time.sleep(sleep_time)
+        
+    return 0
     
     
 if __name__ == "__main__":
