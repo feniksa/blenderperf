@@ -86,13 +86,14 @@ class Api:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
 
-    def post_task_data(self, task_id, metric, data):
+    def post_task_data(self, task_id, metric, data, data_type='text'):
         url = self.get_url('gpuperf/nodeapi/task/postdata')
         data = {
             self.__key_api: self.api_key,
             'task_id': task_id, 
             'metric': metric,
             'data':  data,
+            'data_type': data_type,
         }
         response = requests.post(url, json.dumps(data))
         response.raise_for_status()

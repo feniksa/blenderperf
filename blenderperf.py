@@ -32,6 +32,7 @@ def execute_task(args, api, task):
                                '--apikey', args.apikey,
                                '--cachedir', args.cachedir,
                                '--workdir', args.workdir,
+                               '--taskid', str(task.get('id')),
                                '--inputs', str(json.dumps(inputs)),
                                ]
 
@@ -59,7 +60,7 @@ def execute_task(args, api, task):
             else:
                 api.task_change_status(task.get('id'), 'failed')
 
-            api.post_task_data(task.get('id'), 'returncode', str(process.returncode))
+            api.post_task_data(task.get('id'), 'returncode', str(process.returncode), 'int')
 
         except subprocess.CalledProcessError as e:
             api.post_task_data(task.get('id'), 'stderr', str(e))
