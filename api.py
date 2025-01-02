@@ -23,7 +23,7 @@ class Api:
         return urljoin(self.url, path)
        
     def ping(self):
-        url = self.get_url('gpuperf/nodeapi/ping')
+        url = self.get_url('automatron/nodeapi/ping')
 
         self.__ping_counter = self.__ping_counter + 1
 
@@ -42,7 +42,7 @@ class Api:
             raise Exception(response.message)
     
     #def get_node_jobs(self):
-    #    url = self.get_url('gpuperf/nodeapi/jobs')
+    #    url = self.get_url('automatron/nodeapi/jobs')
     #    data = {
     #        self.__key_api: self.api_key
     #    }
@@ -56,7 +56,7 @@ class Api:
     #        raise Exception(response.message)
 
     def task_change_status(self, task_id, status):
-        url = self.get_url('gpuperf/nodeapi/task/status/change')
+        url = self.get_url('automatron/nodeapi/task/status/change')
         data = {
             self.__key_api: self.api_key,
             'task_id': task_id, 
@@ -73,7 +73,7 @@ class Api:
             raise Exception(response.message)
 
     def get_node_task(self):
-        url = self.get_url('gpuperf/nodeapi/task')
+        url = self.get_url('automatron/nodeapi/task')
         data = {
             self.__key_api: self.api_key,
         }
@@ -87,7 +87,7 @@ class Api:
             raise Exception(response.message)
 
     def post_task_data(self, task_id, metric, data, data_type='text'):
-        url = self.get_url('gpuperf/nodeapi/task/postdata')
+        url = self.get_url('automatron/nodeapi/task/postdata')
         data = {
             self.__key_api: self.api_key,
             'task_id': task_id, 
@@ -106,7 +106,7 @@ class Api:
 
 
     #def get_node_tasks(self, node_job_id):
-    #    url = self.get_url('gpuperf/nodeapi/tasks')
+    #    url = self.get_url('automatron/nodeapi/tasks')
     #    data = {
     #        self.__key_api: self.api_key,
     #        'node_job_id': node_job_id,
@@ -122,7 +122,7 @@ class Api:
 
 
 #    def create_report(self, application:str):
-#        url = urljoin(self.url, 'gpuperf/api/report/create')
+#        url = urljoin(self.url, 'automatron/api/report/create')
 #
 #        data = {
 #            'api_key': self.api_key,
@@ -143,7 +143,7 @@ class Api:
 #        pass
 
 #def api_create_report(url, api_key, application, application_hash):
-#    url = urljoin(url, 'gpuperf/api/report/create')
+#    url = urljoin(url, 'automatron/api/report/create')
 #
 #    data = {
 #        'api_key' : api_key,
@@ -163,7 +163,7 @@ class Api:
 #        raise Exception(response.message)
 #
 #def api_create_gpu_report(url, api_key, report_id, asset_hash):
-#    url = urljoin(url, 'gpuperf/api/report/gpu/create')
+#    url = urljoin(url, 'automatron/api/report/gpu/create')
 #
 #    gpu_name = ''
 #    median_time = 23.3
