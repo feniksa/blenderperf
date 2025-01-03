@@ -97,6 +97,8 @@ def main():
         print(reply)
         return 0
 
+    api.post_system_info()
+
     while True:
         start_time = time.time()  
 

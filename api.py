@@ -7,6 +7,12 @@ import tarfile
 from pathlib import Path
 from urllib.parse import urljoin
 
+# for system info
+import os
+import platform
+import psutil
+import socket
+
 
 class Api:
     url:str = ''
@@ -40,6 +46,59 @@ class Api:
         else:
             print("Failed:", response.status_code, response.message)
             raise Exception(response.message)
+
+    def post_system_info(self):
+        url = self.get_url('automatron/nodeapi/systeminfo/post')
+
+        # CPU Information
+        cpu_info = platform.processor()
+        cpu_cores = os.cpu_count()
+
+        # RAM Information
+        ram_info = psutil.virtual_memory()
+        total_ram = ram_info.total / (1024**3)  # Convert to GB
+
+        # OS Information
+        os_info = platform.system() + " " + platform.release()
+
+        # Hostname
+        hostname = socket.gethostname()
+
+        # Disk Information
+        disk_info = psutil.disk_usage('/')
+        total_disk_space = disk_info.total / (1024**3)  # Convert to GB
+        free_disk_space = disk_info.free / (1024**3)  # Convert to GB
+
+        # Display information
+        print("System Information")
+        print("------------------")
+        print(f"CPU: {cpu_info} ({cpu_cores} cores)")
+        print(f"RAM: {total_ram:.2f} GB")
+        print(f"OS: {os_info}")
+        print(f"Hostname: {hostname}")
+        print(f"Total Disk Space: {total_disk_space:.2f} GB")
+        print(f"Free Disk Space: {free_disk_space:.2f} GB")
+
+
+        data = {
+                self.__key_api: self.api_key,
+                'cpu_name' : cpu_info,
+                'cpu_cores' : cpu_cores,
+                'os': os_info,
+                'hostname': hostname,
+                'disk_root_space_full': total_disk_space,
+                'disk_root_space_free': free_disk_space,
+                }
+
+        response = requests.post(url, json.dumps(data))
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Failed:", response.status_code, response.message)
+            raise Exception(response.message)
+
     
     #def get_node_jobs(self):
     #    url = self.get_url('automatron/nodeapi/jobs')
